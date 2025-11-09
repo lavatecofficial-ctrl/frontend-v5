@@ -79,7 +79,7 @@ export default function AviatorPortal({ selectedBookmaker, roundData, history, p
           {/* Fila Media - Dos columnas */}
           <div className={styles.middleRow}>
             {/* Columna izquierda (2.5fr) - MultiplierTrend con historial integrado */}
-            <div className={styles.card} style={{ minHeight: 0 }}>
+            <div className={styles.card} style={{ minHeight: 0, padding: 0 }}>
               <MultiplierTrend
                 rounds={transformedHistory}
                 isLoadingRounds={history.length === 0}

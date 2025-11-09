@@ -29,6 +29,7 @@ interface SpacemanBookmakerInfo {
 export const useSpaceman = () => {
   const [status, setStatus] = useState<SpacemanStatus | null>(null);
   const [bookmakerInfo, setBookmakerInfo] = useState<SpacemanBookmakerInfo | null>(null);
+  const [websockets, setWebsockets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,6 +91,64 @@ export const useSpaceman = () => {
       setError(errorMsg);
       console.error('Error starting Spaceman:', err);
       return { success: false, message: errorMsg };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getAllWebSockets = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`${APP_CONFIG.api.baseUrl}/api/spaceman/websockets`, {
+        method: 'GET',
+        headers: getAuthHeader(),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setWebsockets(data.data);
+        return { success: true, data: data.data };
+      } else {
+        setError(data.message || 'Error al obtener websockets');
+        return { success: false, message: data.message, data: [] };
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || 'Error de conexión';
+      setError(errorMessage);
+      console.error('Error getting all spaceman websockets:', err);
+      return { success: false, message: errorMessage, data: [] };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updateAuthMessageById = useCallback(async (id: number, authMessage: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const url = `${APP_CONFIG.api.baseUrl}/api/spaceman/websocket/${id}/auth-message`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: getAuthHeader(),
+        body: JSON.stringify({ authMessage }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        return { success: true };
+      } else {
+        setError(data.message || 'Error al actualizar Auth Message');
+        return { success: false, message: data.message };
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || 'Error de conexión';
+      setError(errorMessage);
+      console.error('Error updating Spaceman auth message by ID:', err);
+      return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
     }
@@ -215,13 +274,16 @@ export const useSpaceman = () => {
   return useMemo(() => ({
     status,
     bookmakerInfo,
+    websockets,
     loading,
     error,
     getStatus,
     getBookmakerInfo,
+    getAllWebSockets,
     updateWebSocketUrl,
     updateWebSocketStatus,
     start,
     updateSessionUrl,
-  }), [status, bookmakerInfo, loading, error, getStatus, getBookmakerInfo, updateWebSocketUrl, updateWebSocketStatus, start, updateSessionUrl]);
+    updateAuthMessageById,
+  }), [status, bookmakerInfo, websockets, loading, error, getStatus, getBookmakerInfo, getAllWebSockets, updateWebSocketUrl, updateWebSocketStatus, start, updateSessionUrl, updateAuthMessageById]);
 };

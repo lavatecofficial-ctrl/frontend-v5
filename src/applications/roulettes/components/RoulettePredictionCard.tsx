@@ -175,88 +175,106 @@ export default function RoulettePredictionCard({ predictionData, rawPrediction }
   }
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-start p-3">
-      {/* Header superior: PREDICCIONES */}
-      <div className="w-full flex items-center justify-center mb-2">
-        <div className="px-2 py-1 rounded-full border border-purple-400/30 text-purple-300 text-[10px] md:text-xs font-semibold tracking-wide uppercase w-full text-center">
-          PREDICCIONES
+    <div className="w-full h-full flex flex-col items-center justify-start p-4 relative">
+      {/* Header superior con estilo premium */}
+      <div className="w-full flex items-center justify-center mb-3">
+        <div className="px-4 py-1.5 rounded-full border-2 border-[#10B981]/40 bg-gradient-to-r from-[#10B981]/10 to-emerald-600/10 backdrop-blur-sm shadow-[0_0_20px_rgba(16,185,129,0.15)] text-[11px] font-bold tracking-wider uppercase text-center">
+          <span className="bg-gradient-to-r from-emerald-300 via-[#10B981] to-emerald-400 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]">
+            PREDICCIONES
+          </span>
         </div>
       </div>
 
       {useRaw ? (
-        <div className="flex-1 w-full flex flex-col items-center justify-center gap-3">
-          {/* Título centrado en el bloque medio */}
-          <div className="px-2 py-1 rounded-full border border-rose-400/30 text-[10px] md:text-xs font-semibold tracking-wide uppercase text-gray-200/90 w-24 md:w-28 text-center">
-            {friendlyType || 'Predicción'}
+        <div className="flex-1 w-full flex flex-col items-center justify-center gap-4">
+          {/* Título centrado con glow effect */}
+          <div className="px-4 py-1.5 rounded-full border-2 border-rose-500/40 bg-gradient-to-r from-rose-500/10 to-red-600/10 backdrop-blur-sm shadow-[0_0_20px_rgba(244,63,94,0.15)] text-[11px] font-bold tracking-wider uppercase w-32 text-center">
+            <span className="bg-gradient-to-r from-rose-300 via-rose-400 to-pink-400 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]">
+              {friendlyType || 'Predicción'}
+            </span>
           </div>
-          {/* Si es COLOR: mostrar solo el color grande al centro */}
+          
+          {/* Si es COLOR: mostrar solo el color grande al centro con efecto premium */}
           {friendlyType === 'COLOR' ? (
             <div
-              className={`text-2xl md:text-3xl leading-tight font-extrabold tracking-tight bg-clip-text text-transparent text-center ${
+              className={`text-4xl md:text-5xl leading-tight font-black tracking-tight bg-clip-text text-transparent text-center drop-shadow-[0_2px_20px_rgba(255,255,255,0.3)] ${
                 colorKeyFromRaw === 'red'
-                  ? 'bg-gradient-to-r from-rose-300 via-rose-200 to-pink-300'
+                  ? 'bg-gradient-to-br from-rose-200 via-rose-300 to-pink-400'
                   : colorKeyFromRaw === 'black'
-                  ? 'bg-gradient-to-r from-gray-200 via-gray-300 to-gray-100'
+                  ? 'bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300'
                   : colorKeyFromRaw === 'green'
-                  ? 'bg-gradient-to-r from-emerald-300 via-emerald-200 to-teal-300'
-                  : 'bg-gradient-to-r from-gray-200 via-gray-300 to-gray-100'
+                  ? 'bg-gradient-to-br from-emerald-200 via-emerald-300 to-teal-400'
+                  : 'bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300'
               }`}
             >
               {labelFromRaw || '—'}
             </div>
           ) : (
-            // Para COLUMNA/DOCENA: mostrar dos tarjetitas con el mismo estilo del título y mismo ancho
-            <div className="w-full flex items-center justify-center gap-2">
+            // Para COLUMNA/DOCENA: tarjetas mejoradas con glassmorphism
+            <div className="w-full flex items-center justify-center gap-3">
               {ordinalValues.length === 0 ? (
-                <div className="text-sm text-gray-400">Sin datos</div>
+                <div className="text-sm text-gray-400/70">Sin datos</div>
               ) : (
                 ordinalValues.map((ord, idx) => (
                   <div
                     key={`${ord}-${idx}`}
-                    className="px-2 py-1 rounded-full border border-emerald-400/30 text-[10px] md:text-xs font-semibold tracking-wide uppercase text-gray-200/90 w-24 md:w-28 text-center"
+                    className="px-4 py-2 rounded-xl border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/10 to-teal-600/10 backdrop-blur-sm shadow-[0_0_20px_rgba(16,185,129,0.15),inset_0_1px_0_rgba(255,255,255,0.1)] text-[11px] font-bold tracking-wider uppercase w-28 text-center hover:scale-105 transition-transform duration-200"
                   >
-                    {ord}
+                    <span className="bg-gradient-to-r from-emerald-300 via-emerald-200 to-teal-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">
+                      {ord}
+                    </span>
                   </div>
                 ))
               )}
             </div>
           )}
-          {/* Porcentaje centrado junto con el contenido */}
+          
+          {/* Porcentaje con diseño profesional y efecto glow */}
           {percentText ? (
-            <div className="w-full flex items-center justify-center">
-              <div className={`px-2 py-1 rounded-full border text-[10px] md:text-xs font-semibold tracking-wide uppercase w-24 md:w-28 text-center ${percentColorClass}`}>
-                {percentText}
+            <div className="w-full flex items-center justify-center mt-2">
+              <div className="px-5 py-2 rounded-full border-2 border-blue-400/40 bg-gradient-to-r from-blue-500/10 to-cyan-600/10 backdrop-blur-sm shadow-[0_0_20px_rgba(59,130,246,0.2),inset_0_1px_0_rgba(255,255,255,0.1)] text-sm font-black tracking-wider uppercase w-32 text-center">
+                <span className="bg-gradient-to-r from-blue-200 via-blue-300 to-cyan-300 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(59,130,246,0.6)]">
+                  {percentText}
+                </span>
               </div>
             </div>
           ) : null}
         </div>
       ) : top ? (
-        <div className="flex-1 w-full flex flex-col items-center justify-center gap-3">
-          {/* Título centrado en el bloque medio (fallback) */}
-          <div className="px-2 py-1 rounded-full border border-rose-400/30 text-[10px] md:text-xs font-semibold tracking-wide uppercase text-gray-200/90 w-24 md:w-28 text-center">COLOR</div>
+        <div className="flex-1 w-full flex flex-col items-center justify-center gap-4">
+          {/* Título mejorado (fallback) */}
+          <div className="px-4 py-1.5 rounded-full border-2 border-rose-500/40 bg-gradient-to-r from-rose-500/10 to-red-600/10 backdrop-blur-sm shadow-[0_0_20px_rgba(244,63,94,0.15)] text-[11px] font-bold tracking-wider uppercase w-32 text-center">
+            <span className="bg-gradient-to-r from-rose-300 via-rose-400 to-pink-400 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]">
+              COLOR
+            </span>
+          </div>
+          
           <div
-            className={`text-2xl md:text-3xl leading-tight font-extrabold tracking-tight bg-clip-text text-transparent text-center
+            className={`text-4xl md:text-5xl leading-tight font-black tracking-tight bg-clip-text text-transparent text-center drop-shadow-[0_2px_20px_rgba(255,255,255,0.3)]
               ${
                 top.key === 'red'
-                  ? 'bg-gradient-to-r from-rose-300 via-rose-200 to-pink-300'
+                  ? 'bg-gradient-to-br from-rose-200 via-rose-300 to-pink-400'
                   : top.key === 'black'
-                  ? 'bg-gradient-to-r from-gray-200 via-gray-300 to-gray-100'
-                  : 'bg-gradient-to-r from-emerald-300 via-emerald-200 to-teal-300'
+                  ? 'bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300'
+                  : 'bg-gradient-to-br from-emerald-200 via-emerald-300 to-teal-400'
             }`}
           >
             {top.label}
           </div>
+          
           {percentText ? (
-            <div className="w-full flex items-center justify-center">
-              <div className={`px-2 py-1 rounded-full border text-[10px] md:text-xs font-semibold tracking-wide uppercase w-24 md:w-28 text-center ${percentColorClass}`}>
-                {percentText}
+            <div className="w-full flex items-center justify-center mt-2">
+              <div className="px-5 py-2 rounded-full border-2 border-blue-400/40 bg-gradient-to-r from-blue-500/10 to-cyan-600/10 backdrop-blur-sm shadow-[0_0_20px_rgba(59,130,246,0.2),inset_0_1px_0_rgba(255,255,255,0.1)] text-sm font-black tracking-wider uppercase w-32 text-center">
+                <span className="bg-gradient-to-r from-blue-200 via-blue-300 to-cyan-300 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(59,130,246,0.6)]">
+                  {percentText}
+                </span>
               </div>
             </div>
           ) : null}
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-sm text-gray-400">Esperando predicción...</div>
+          <div className="text-sm text-gray-400/60 font-medium">Esperando predicción...</div>
         </div>
       )}
     </div>

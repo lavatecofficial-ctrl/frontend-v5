@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Bookmaker } from '@/types/portal';
 import SmallCards from './SmallCards';
 import LiveMultiplier from './LiveMultiplier';
@@ -9,8 +9,11 @@ import PortalHeader from './PortalHeader';
 import HistoryChart from './HistoryChart';
 import MultiplierTrend from './MultiplierTrend';
 import BetsBlock from './BetsBlock';
+import StatsCard from './StatsCard';
+import DistributionChart from './DistributionChart';
+import FinancesTable from './FinancesTable';
 import useSpacemanSocket from '@/hooks/useSpacemanSocket';
-import '../styles/portal.css';
+import styles from '../styles/SpacemanPortal.module.css';
 
 interface SpacemanPortalProps {
   selectedBookmaker: Bookmaker;
@@ -37,80 +40,115 @@ export default function SpacemanPortal({ selectedBookmaker }: SpacemanPortalProp
   const [showGrid, setShowGrid] = useState(true);
 
   // Transformar el historial para el formato que espera MultiplierTrend
-  const transformedHistory = history.map(item => {
-    const createdAt = typeof item.createdAt === 'string' ? item.createdAt : item.createdAt.toISOString();
-    return {
-      max_multiplier: parseFloat(item.maxMultiplier as any) || 0,
-      created_at: createdAt,
-      round_id: item.roundId || `round-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    };
-  });
-
-  // Log para depuración
-  console.log('📊 Historial transformado para MultiplierTrend:', {
-    originalLength: history.length,
-    transformedLength: transformedHistory.length,
-    firstItem: transformedHistory[0],
-    lastItem: transformedHistory[transformedHistory.length - 1]
-  });
+  const transformedHistory = useMemo(() => {
+    if (!history || history.length === 0) return [];
+    
+    return history
+      .filter(item => item.maxMultiplier !== undefined && item.maxMultiplier !== null)
+      .map(item => {
+        let dateString: string;
+        
+        try {
+          if (typeof item.createdAt === 'string') {
+            dateString = item.createdAt;
+          } else if (item.createdAt instanceof Date) {
+            dateString = item.createdAt.toISOString();
+          } else if (item.createdAt) {
+            dateString = new Date(item.createdAt).toISOString();
+          } else {
+            dateString = new Date().toISOString();
+          }
+        } catch (error) {
+          dateString = new Date().toISOString();
+        }
+        
+        return {
+          max_multiplier: item.maxMultiplier || 0,
+          created_at: dateString,
+          round_id: item.roundId || 'unknown'
+        };
+      });
+  }, [history]);
 
   return (
-    <div className="spaceman-portal h-screen md:h-screen grid grid-cols-12 gap-1 p-1 overflow-hidden portal-container portal-enter relative bg-gradient-to-b from-[#0B0B0B] via-[#1A0B1A] to-[#2A0B2A] modern-scroll" style={{ gap: '4px', padding: '4px', gridTemplateRows: '50px 50px 32px 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr' }}>
-      {/* Overlay radial adicional */}
-      <div className="absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15),transparent_70%)] pointer-events-none"></div>
-      
-      {/* Prediction Banner eliminado: la predicción ahora vive en RoundInfo */}
-      
-      {/* Header - Fila 1 completa */}
+    <div className={styles.portalContainer}>
+      {/* Header - Primera fila del grid */}
       <PortalHeader selectedBookmaker={selectedBookmaker} />
 
-      {/* 4 Small Cards - Fila 2 */}
-      <SmallCards roundData={roundData} />
+      {/* Portal Content - Segunda fila del grid */}
+      <div className={styles.portalContent}>
+        <div className={styles.gridContainer}>
+          {/* Fila Superior - Small Cards */}
+          <div className={styles.topRow}>
+            <SmallCards roundData={roundData} />
+          </div>
 
-      {/* Columna izquierda 30% - Filas 3-12 */}
-      <div className="bets-block col-span-12 md:col-span-4 row-span-10 text-gray-200 order-3 md:order-none modern-scroll-sidebar" style={{ borderRadius: '20px' }}>
-        <BetsBlock 
-          history={history}
-          serviceStatus={serviceStatus}
-          isConnected={isConnected}
-          showEma={showEma}
-          setShowEma={setShowEma}
-          showBollingerBands={showBollingerBands}
-          setShowBollingerBands={setShowBollingerBands}
-          showSupportResistance={showSupportResistance}
-          setShowSupportResistance={setShowSupportResistance}
-          showGrid={showGrid}
-          setShowGrid={setShowGrid}
-        />
-      </div>
+          {/* Fila Media - Dos columnas */}
+          <div className={styles.middleRow}>
+            {/* Columna izquierda (2.5fr) - Solo MultiplierTrend */}
+            <div className={styles.card} style={{ minHeight: 0, display: 'flex', flexDirection: 'column', padding: 0 }}>
+              {/* MultiplierTrend - ocupa todo el espacio */}
+              <div style={{ flexGrow: 1, minHeight: 0, overflow: 'hidden' }}>
+                <MultiplierTrend
+                  rounds={transformedHistory}
+                  isLoadingRounds={history.length === 0}
+                  onEmaStatusChange={setIsAboveEma}
+                  showEma={showEma}
+                  showBollingerBands={showBollingerBands}
+                  showSupportResistance={showSupportResistance}
+                  showGrid={showGrid}
+                />
+              </div>
+            </div>
 
-      {/* Columna Derecha 70% - Game Play completo */}
-      <div className="game-play col-span-12 md:col-span-8 row-span-10 text-gray-200 order-2 md:order-none flex flex-col modern-scroll" style={{ gap: '4px' }}>
-        {/* HistoryChart */}
-        <div className="flex-shrink-0">
-          <HistoryChart history={history} />
-        </div>
+            {/* Desktop: BetsBlock completo / Mobile: Dos tarjetas separadas */}
+            <div className={`${styles.card} ${styles.betsBlockDesktop}`}>
+              <BetsBlock 
+                history={history}
+                serviceStatus={serviceStatus}
+                isConnected={isConnected}
+                showEma={showEma}
+                setShowEma={setShowEma}
+                showBollingerBands={showBollingerBands}
+                setShowBollingerBands={setShowBollingerBands}
+                showSupportResistance={showSupportResistance}
+                setShowSupportResistance={setShowSupportResistance}
+                showGrid={showGrid}
+                setShowGrid={setShowGrid}
+              />
+            </div>
+            
+            {/* Mobile only: Tarjeta 1 - Predicción */}
+            <div className={`${styles.card} ${styles.predictionCardMobile}`}>
+              <RoundInfo 
+                roundData={roundData} 
+                isConnected={isConnected}
+                prediction={prediction} 
+                trend={isAboveEma ? 'alcista' : 'bajista'} 
+              />
+            </div>
+            
+            {/* Mobile only: Tarjeta 2 - Multiplicador */}
+            <div className={`${styles.card} ${styles.multiplierCardMobile}`}>
+              <LiveMultiplier 
+                roundData={roundData}
+                isConnected={isConnected}
+              />
+            </div>
+          </div>
 
-        {/* MultiplierTrend - ocupa el espacio restante */}
-        <div className="flex-grow overflow-hidden" style={{ minHeight: '0' }}>
-          <MultiplierTrend
-            rounds={transformedHistory}
-            isLoadingRounds={history.length === 0}
-            onEmaStatusChange={setIsAboveEma}
-            showEma={showEma}
-            showBollingerBands={showBollingerBands}
-            showSupportResistance={showSupportResistance}
-            showGrid={showGrid}
-          />
-        </div>
-
-        {/* RoundInfo y LiveMultiplier - altura fija */}
-        <div className="cards-container flex items-stretch" style={{ minHeight: '0', gap: '4px', flexShrink: 0 }}>
-          <RoundInfo roundData={roundData} isConnected={isConnected} prediction={prediction} trend={isAboveEma ? 'alcista' : 'bajista'} />
-          <LiveMultiplier 
-            roundData={roundData}
-            isConnected={isConnected}
-          />
+          {/* Fila Inferior - Tres columnas */}
+          <div className={styles.bottomRow}>
+            <div className={styles.card}>
+              <StatsCard history={history} />
+            </div>
+            <div className={styles.card}>
+              <DistributionChart history={history} />
+            </div>
+            <div className={styles.card}>
+              <FinancesTable history={history} />
+            </div>
+          </div>
         </div>
       </div>
 

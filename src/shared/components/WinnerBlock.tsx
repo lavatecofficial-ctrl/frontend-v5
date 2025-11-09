@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { FaTelegram } from 'react-icons/fa';
+import { FaTelegram, FaFacebook } from 'react-icons/fa';
 import styles from '@/shared/styles/WinnerBlock.module.css';
 
 type AnimationPhase = 'intro' | 'cards' | 'promo';
@@ -156,13 +156,22 @@ export const WinnerBlock: React.FC = () => {
 
             <div className={styles.promoButtons}>
               <button
-                onClick={() => window.open('https://t.me/aviatorpredictor', '_blank')}
+                onClick={() => window.open('https://t.me/+SmIGA3hwmuowMGYx', '_blank')}
                 className={`${styles.button} ${styles.buttonPrimary}`}
               >
                 <span className={styles.buttonIcon}>
                   <FaTelegram />
                 </span>
                 ÚNETE AL TELEGRAM
+              </button>
+              <button
+                onClick={() => window.open('https://www.facebook.com/profile.php?id=61575684587937', '_blank')}
+                className={`${styles.button} ${styles.buttonSecondary}`}
+              >
+                <span className={styles.buttonIcon}>
+                  <FaFacebook />
+                </span>
+                VER FACEBOOK
               </button>
             </div>
           </div>

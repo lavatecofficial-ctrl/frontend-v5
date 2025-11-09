@@ -78,24 +78,18 @@ const useSpacemanSocket = (bookmakerId: number) => {
   // Conectar al WebSocket de Spaceman
   useEffect(() => {
     if (!isAuthenticated || !bookmakerId) {
-      console.log('🔒 No autenticado o sin bookmakerId:', { isAuthenticated, bookmakerId });
       return;
     }
 
     const token = localStorage.getItem('authToken');
     if (!token) {
-      console.log('🚫 No hay token en localStorage');
       setNotification({ message: 'No autenticado. Redirigiendo al login...', type: 'error' });
       setTimeout(() => router.push('/login'), 2000);
       return;
     }
 
-    console.log('🚀 Iniciando conexión WebSocket a Spaceman...');
-    console.log('📍 URL:', process.env.NEXT_PUBLIC_WS_URL || 'https://grupoaviatorcolombia.app');
-    console.log('🎯 Bookmaker ID:', bookmakerId);
-
     // URL del WebSocket específico para Spaceman
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'https://grupoaviatorcolombia.app';
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3006';
     const newSocket = io(`${wsUrl}/spaceman`, {
       transports: ['websocket', 'polling'],
       auth: {
@@ -103,24 +97,15 @@ const useSpacemanSocket = (bookmakerId: number) => {
       },
     });
 
-    // Log de todos los eventos para debugging
-    newSocket.onAny((eventName, ...args) => {
-      console.log(`📡 Evento recibido [${eventName}]:`, args);
-    });
-
     newSocket.on('connect', () => {
-      console.log('✅ Conectado al WebSocket de Spaceman');
-      console.log('🆔 Socket ID:', newSocket.id);
       setIsConnected(true);
       setServiceStatus(prev => ({ ...prev, websocket_status: 'connected' }));
       
       const spacemanId = Number(bookmakerId);
-      console.log('📤 Enviando join_spaceman con spacemanId (number):', spacemanId);
       newSocket.emit('join_spaceman', { spacemanId });
     });
 
     newSocket.on('disconnect', (reason) => {
-      console.log('❌ Desconectado del WebSocket de Spaceman. Razón:', reason);
       setIsConnected(false);
       setServiceStatus(prev => ({ ...prev, websocket_status: 'disconnected' }));
     });
@@ -138,12 +123,8 @@ const useSpacemanSocket = (bookmakerId: number) => {
 
     // Escuchar confirmación de unión a spaceman
     newSocket.on('spaceman_joined', (data) => {
-      console.log('🎉 Unido al spaceman:', bookmakerId);
-      console.log('📊 Datos recibidos:', data);
-      
       // Procesar datos iniciales
       if (data.data?.latestRounds) {
-        console.log('📚 Procesando historial inicial:', data.data.latestRounds.length, 'rondas');
         const formattedHistory = data.data.latestRounds.map((round: any) => ({
           id: round.id,
           roundId: round.game_id,
@@ -156,7 +137,6 @@ const useSpacemanSocket = (bookmakerId: number) => {
           createdAt: new Date(round.created_at)
         }));
         setHistory(formattedHistory);
-        console.log('✅ Historial inicial establecido con', formattedHistory.length, 'rondas');
       }
 
       // Actualizar estado del servicio desde connectionStatus si está disponible
@@ -172,16 +152,14 @@ const useSpacemanSocket = (bookmakerId: number) => {
             service_health: active === 2 ? 'healthy' : active === 1 ? 'warning' : 'error',
           };
           setServiceStatus(newStatus);
-          console.log('🟢 serviceStatus actualizado desde connectionStatus:', newStatus);
         }
       } catch (e) {
-        console.warn('No se pudo actualizar serviceStatus desde connectionStatus:', e);
+        console.error('Error actualizando serviceStatus desde connectionStatus:', e);
       }
     });
 
     // Escuchar historial de rondas
     newSocket.on('latest_rounds', (data) => {
-      console.log('📚 Evento latest_rounds recibido:', data);
       if (data.success && data.data && Array.isArray(data.data)) {
         const formattedHistory = data.data.map((round: any) => ({
           id: round.id,
@@ -195,7 +173,6 @@ const useSpacemanSocket = (bookmakerId: number) => {
           createdAt: new Date(round.created_at)
         }));
         setHistory(formattedHistory);
-        console.log('📚 Historial de Spaceman recibido:', formattedHistory.length, 'rondas');
       }
     });
 
@@ -211,15 +188,13 @@ const useSpacemanSocket = (bookmakerId: number) => {
 
     // Escuchar datos completos de la ronda
     newSocket.on('round', (data) => {
-      console.log('🎯 Evento round recibido:', data);
-      
       setRoundData(prev => {
         const newData = {
           online_players: parseInt(data.online_player) || 0,
           bets_count: parseInt(data.bets_count) || 0,
           total_bet_amount: parseFloat(data.total_bet_amount) || 0,
           total_cashout: parseFloat(data.total_cashout) || 0,
-          current_multiplier: prev.current_multiplier, // Mantener el multiplicador actual
+          current_multiplier: prev.current_multiplier,
           max_multiplier: parseFloat(data.max_multiplier) || 0,
           game_state: data.game_state || 'Run',
           round_id: data.game_id,
@@ -227,8 +202,6 @@ const useSpacemanSocket = (bookmakerId: number) => {
           service_status: 'connected' as const,
           last_update: new Date().toISOString(),
         };
-
-        console.log('🔄 Datos de ronda actualizados:', newData);
 
         // Si tenemos un max_multiplier válido, actualizar el historial
         if (newData.max_multiplier > 0 && newData.round_id) {
@@ -249,15 +222,11 @@ const useSpacemanSocket = (bookmakerId: number) => {
 
             setHistory(prevHistory => {
               const roundExists = prevHistory.some(item => item.roundId === newData.round_id);
-              if (roundExists) {
-                console.log('⚠️ Ronda ya existe en historial:', newData.round_id);
-                return prevHistory;
+              if (!roundExists) {
+                return [newHistoryItem, ...prevHistory.slice(0, 99)];
               }
-              
-              return [newHistoryItem, ...prevHistory.slice(0, 99)];
+              return prevHistory;
             });
-            
-            console.log('🔄 Ronda finalizada - Historial actualizado:', newHistoryItem);
           }
         }
 
@@ -284,10 +253,9 @@ const useSpacemanSocket = (bookmakerId: number) => {
             service_health: active === 2 ? 'healthy' : active === 1 ? 'warning' : 'error',
           };
           setServiceStatus(newStatus);
-          console.log('🟣 serviceStatus actualizado desde connections_status:', newStatus);
         }
       } catch (e) {
-        console.warn('No se pudo mapear connections_status a serviceStatus:', e);
+        console.error('Error mapeando connections_status a serviceStatus:', e);
       }
     });
 
@@ -304,7 +272,6 @@ const useSpacemanSocket = (bookmakerId: number) => {
           round_id: typeof predictionData.round_id === 'string' ? predictionData.round_id : undefined,
         };
         setPrediction(prediction);
-        console.log('📊 Predicción recibida:', prediction);
       } catch (error) {
         console.error('Error al procesar predicción:', error);
       }

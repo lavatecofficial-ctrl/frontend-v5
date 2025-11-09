@@ -60,10 +60,13 @@ export default function UsersManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'admins'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [activeUsersCount, setActiveUsersCount] = useState(0);
+  const [inactiveUsersCount, setInactiveUsersCount] = useState(0);
+  const [adminsCount, setAdminsCount] = useState(0);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
   const [showPlanModal, setShowPlanModal] = useState(false);
@@ -89,7 +92,7 @@ export default function UsersManagement() {
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   const [openActionMenuPos, setOpenActionMenuPos] = useState<{ top: number; left: number } | null>(null);
   const actionMenuRef = useRef<HTMLDivElement | null>(null);
-  const limit = 10;
+  const limit = 5;
 
   useEffect(() => {
     loadUsers();
@@ -119,37 +122,79 @@ export default function UsersManagement() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      // Fetch users with proper pagination and filtering
-      const response = await adminService.getUsers(
-        currentPage, // page
-        10, // limit
-        searchTerm || undefined // search
-      );
       
-      // Map the response to our User interface
-      let mappedUsers = response.users.map((user: any) => ({
+      // Primero obtener TODOS los usuarios para calcular totales globales
+      const allUsersResponse = await adminService.getUsers(1, 9999, searchTerm || undefined);
+      
+      // Calcular totales globales
+      const allUsersMapped = allUsersResponse.users.map((user: any) => ({
+        ...user,
+        role: user.role,
+        planEndDate: user.planEndDate ? new Date(user.planEndDate).toISOString() : null,
+      }));
+      
+      const activeCount = allUsersMapped.filter((user: any) => {
+        const roleForcesActive = user.role === 'admin' || user.role === 'superadmin';
+        return roleForcesActive || (user.planEndDate ? new Date(user.planEndDate) > new Date() : false);
+      }).length;
+      
+      const inactiveCount = allUsersMapped.filter((user: any) => {
+        const roleForcesActive = user.role === 'admin' || user.role === 'superadmin';
+        const isActive = roleForcesActive || (user.planEndDate ? new Date(user.planEndDate) > new Date() : false);
+        return !isActive;
+      }).length;
+      
+      const adminsCount = allUsersMapped.filter((user: any) => {
+        return user.role === 'admin' || user.role === 'superadmin';
+      }).length;
+      
+      setActiveUsersCount(activeCount);
+      setInactiveUsersCount(inactiveCount);
+      setAdminsCount(adminsCount);
+      setTotalUsers(allUsersResponse.total);
+      
+      // Ahora filtrar según el estado seleccionado
+      let filteredUsers = allUsersMapped;
+      if (statusFilter === 'active') {
+        filteredUsers = allUsersMapped.filter((user: any) => {
+          const roleForcesActive = user.role === 'admin' || user.role === 'superadmin';
+          return roleForcesActive || (user.planEndDate ? new Date(user.planEndDate) > new Date() : false);
+        });
+      } else if (statusFilter === 'inactive') {
+        filteredUsers = allUsersMapped.filter((user: any) => {
+          const roleForcesActive = user.role === 'admin' || user.role === 'superadmin';
+          const isActive = roleForcesActive || (user.planEndDate ? new Date(user.planEndDate) > new Date() : false);
+          return !isActive;
+        });
+      } else if (statusFilter === 'admins') {
+        filteredUsers = allUsersMapped.filter((user: any) => {
+          return user.role === 'admin' || user.role === 'superadmin';
+        });
+      }
+      
+      // Calcular paginación basada en usuarios filtrados
+      const totalFiltered = filteredUsers.length;
+      const calculatedTotalPages = Math.ceil(totalFiltered / 5);
+      setTotalPages(calculatedTotalPages);
+      
+      // Obtener solo los usuarios de la página actual
+      const startIndex = (currentPage - 1) * 5;
+      const endIndex = startIndex + 5;
+      const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+      
+      // Mapear usuarios para la vista
+      const mappedUsers = paginatedUsers.map((user: any) => ({
         ...user,
         isActive: user.isActive ?? true,
         lastLoginAt: user.lastLoginAt ? new Date(user.lastLoginAt).toISOString() : null,
         planStartDate: user.planStartDate ? new Date(user.planStartDate).toISOString() : null,
-        planEndDate: user.planEndDate ? new Date(user.planEndDate).toISOString() : null,
+        planEndDate: user.planEndDate,
         isEmailVerified: user.isEmailVerified ?? false,
         createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : new Date().toISOString(),
         updatedAt: user.updatedAt ? new Date(user.updatedAt).toISOString() : new Date().toISOString()
       }));
       
-      // Filtrar por estado
-      if (statusFilter !== 'all') {
-        mappedUsers = mappedUsers.filter((user: User) => {
-          const roleForcesActive = user.role === 'admin' || user.role === 'superadmin';
-          const isActive = roleForcesActive || (user.planEndDate ? new Date(user.planEndDate) > new Date() : false);
-          return statusFilter === 'active' ? isActive : !isActive;
-        });
-      }
-      
       setUsers(mappedUsers);
-      setTotalPages(response.totalPages);
-      setTotalUsers(response.total);
     } catch (err) {
       setError('Error al cargar los usuarios');
       console.error(err);
@@ -368,35 +413,49 @@ export default function UsersManagement() {
 
   const getRoleBadge = (role: string) => {
     const styles = {
-      user: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-      admin: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-      superadmin: 'bg-red-500/10 text-red-400 border-red-500/20'
+      user: 'bg-zinc-800 text-zinc-400',
+      admin: 'bg-violet-500/10 text-violet-400',
+      superadmin: 'bg-red-500/10 text-red-400'
     };
     
     const labels = {
-      user: 'Usuario',
+      user: 'User',
       admin: 'Admin',
-      superadmin: 'Super Admin'
+      superadmin: 'Super'
     };
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${styles[role as keyof typeof styles]}`}>
+      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide ${styles[role as keyof typeof styles]}`}>
         {labels[role as keyof typeof labels]}
       </span>
     );
+  };
+
+  const getInitials = (fullName: string = '') => {
+    const parts = fullName.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    const first = parts[0].charAt(0).toUpperCase();
+    const last = parts[parts.length - 1].charAt(0).toUpperCase();
+    return `${first}${last}`;
   };
 
   const getStatusBadge = (user: User) => {
     // Admin y Superadmin siempre activos
     const roleForcesActive = user.role === 'admin' || user.role === 'superadmin';
     const isActive = roleForcesActive || (user.planEndDate ? new Date(user.planEndDate) > new Date() : false);
-    const styles = {
-      active: 'bg-green-500/10 text-green-400 border-green-500/20',
-      inactive: 'bg-red-500/10 text-red-400 border-red-500/20'
-    };
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${styles[isActive ? 'active' : 'inactive']}`}>
+      <span
+        className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium border shadow-sm ${
+          isActive
+            ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
+            : 'bg-red-500/10 text-red-300 border-red-500/20'
+        }`}
+      >
+        <span
+          className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-red-400'}`}
+        />
         {isActive ? 'Activo' : 'Inactivo'}
       </span>
     );
@@ -452,135 +511,141 @@ export default function UsersManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-white">Gestión de Usuarios</h2>
-        </div>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1 max-w-md">
-          <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+    <div className="space-y-4">
+      {/* Search and Filters - Compact */}
+      <div className="flex items-center gap-3">
+        <div className="relative w-64">
+          <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500 w-4 h-4" />
           <input
             type="text"
-            placeholder="Buscar por nombre o email..."
+            placeholder="Buscar usuarios..."
             value={searchTerm}
             onChange={handleSearch}
-            className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors duration-200"
+            className="w-full pl-9 pr-3 py-2 bg-black/40 border border-zinc-800 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors h-[34px]"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           <button
             onClick={() => { setStatusFilter('all'); setCurrentPage(1); }}
-            className={`px-4 py-3 rounded-lg font-medium transition-colors duration-200 ${
+            className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
               statusFilter === 'all'
-                ? 'bg-purple-500 text-white'
-                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700 border border-gray-700'
+                ? 'bg-white text-black'
+                : 'bg-black/40 text-zinc-400 hover:text-white border border-zinc-800'
             }`}
           >
             Todos ({totalUsers})
           </button>
           <button
             onClick={() => { setStatusFilter('active'); setCurrentPage(1); }}
-            className={`px-4 py-3 rounded-lg font-medium transition-colors duration-200 ${
+            className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
               statusFilter === 'active'
-                ? 'bg-green-500 text-white'
-                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700 border border-gray-700'
+                ? 'bg-emerald-500 text-white'
+                : 'bg-black/40 text-zinc-400 hover:text-white border border-zinc-800'
             }`}
           >
-            Activos
+            Activos ({activeUsersCount})
           </button>
           <button
             onClick={() => { setStatusFilter('inactive'); setCurrentPage(1); }}
-            className={`px-4 py-3 rounded-lg font-medium transition-colors duration-200 ${
+            className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
               statusFilter === 'inactive'
                 ? 'bg-red-500 text-white'
-                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700 border border-gray-700'
+                : 'bg-black/40 text-zinc-400 hover:text-white border border-zinc-800'
             }`}
           >
-            Inactivos
+            Inactivos ({inactiveUsersCount})
+          </button>
+          <button
+            onClick={() => { setStatusFilter('admins'); setCurrentPage(1); }}
+            className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+              statusFilter === 'admins'
+                ? 'bg-violet-500 text-white'
+                : 'bg-black/40 text-zinc-400 hover:text-white border border-zinc-800'
+            }`}
+          >
+            Admins ({adminsCount})
           </button>
         </div>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-          <p className="text-red-400">{error}</p>
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+          <p className="text-red-400 text-sm">{error}</p>
         </div>
       )}
 
       {/* Users Table */}
-      <div className="bg-gray-800/20 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden">
+      <div className="bg-black/40 backdrop-blur-sm border border-zinc-800 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-700/50">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+            <thead>
+              <tr className="border-b border-zinc-800">
+                <th className="px-4 py-3 text-left text-[10px] font-semibold text-zinc-500 tracking-wider">
                   Usuario
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-[10px] font-semibold text-zinc-500 tracking-wider">
                   Rol
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  Status
+                <th className="px-4 py-3 text-left text-[10px] font-semibold text-zinc-500 tracking-wider">
+                  Estado
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-[10px] font-semibold text-zinc-500 tracking-wider">
                   Vence
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  LAST LOGIN
+                <th className="px-4 py-3 text-left text-[10px] font-semibold text-zinc-500 tracking-wider">
+                  Último Login
                 </th>
-                <th className="px-6 py-4 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-[10px] font-semibold text-zinc-500 tracking-wider">
                   Acciones
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700">
+            <tbody>
               {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-700/30 transition-colors duration-200">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-white">
-                        {user.fullName}
+                <tr key={user.id} className="border-b border-zinc-800/50 hover:bg-white/5 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white grid place-items-center font-semibold text-xs shadow-sm">
+                        {getInitials(user.fullName)}
                       </div>
-                      <div className="text-xs text-gray-400">
-                        {user.email}
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-white truncate max-w-[220px]">
+                          {user.fullName}
+                        </div>
+                        <div className="text-xs text-zinc-400 truncate max-w-[220px]">
+                          {user.email}
+                        </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-3">
                     {getRoleBadge(user.role)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-3">
                     {getStatusBadge(user)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-3">
                     {user.role === 'admin' || user.role === 'superadmin' ? (
-                      <span className="px-2 py-1 rounded-full text-xs font-medium border bg-orange-500/10 text-orange-400 border-orange-500/20">Nunca</span>
+                      <span className="text-xs text-zinc-500">∞</span>
                     ) : user.planEndDate ? (
-                      <div className="text-sm text-gray-400">
-                        <div>{formatDate(user.planEndDate)}</div>
-                        <div className="text-xs text-gray-500">{formatTime(user.planEndDate)}</div>
+                      <div className="text-xs text-zinc-400">
+                        {formatDate(user.planEndDate)}
                       </div>
                     ) : (
-                      <span className="text-sm text-gray-400">-</span>
+                      <span className="text-xs text-zinc-500">-</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-3">
                     {user.lastLoginAt ? (
-                      <div className="text-sm text-gray-400">
-                        <div>{formatDate(user.lastLoginAt)}</div>
-                        <div className="text-xs text-gray-500">{formatTime(user.lastLoginAt)}</div>
+                      <div className="text-xs text-zinc-400">
+                        {formatDate(user.lastLoginAt)}
                       </div>
                     ) : (
-                      <span className="text-sm text-gray-400">Nunca</span>
+                      <span className="text-xs text-zinc-500">Nunca</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                  <td className="px-4 py-3 text-right relative">
                     <div className="inline-flex items-center">
                       <button
                         aria-label="Abrir acciones"
@@ -669,17 +734,17 @@ export default function UsersManagement() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between bg-gray-800/20 backdrop-blur-sm border border-gray-700 rounded-xl px-6 py-4">
-          <div className="text-sm text-gray-400">
-            Mostrando página {currentPage} de {totalPages}
+        <div className="flex items-center justify-between bg-black/40 border border-zinc-800 rounded-lg px-4 py-3">
+          <div className="text-xs text-zinc-500">
+            Página {currentPage} de {totalPages}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-xs rounded-md hover:bg-zinc-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              Anterior
+              ←
             </button>
             <div className="flex gap-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -697,10 +762,10 @@ export default function UsersManagement() {
                   <button
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
-                    className={`px-3 py-2 rounded-lg transition-colors ${
+                    className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
                       currentPage === pageNum
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        ? 'bg-white text-black font-semibold'
+                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
                     }`}
                   >
                     {pageNum}
@@ -711,9 +776,9 @@ export default function UsersManagement() {
             <button
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-xs rounded-md hover:bg-zinc-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              Siguiente
+              →
             </button>
           </div>
         </div>
@@ -721,10 +786,10 @@ export default function UsersManagement() {
 
       {/* Plan Management Modal */}
       {showPlanModal && selectedUser && (
-        <div className="fixed inset-0 z-50 overflow-hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div className="fixed inset-0 z-50 overflow-hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
           {/* Overlay */}
           <div
-            className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity"
             aria-hidden="true"
             onClick={handleClosePlanModal}
           />
@@ -733,11 +798,11 @@ export default function UsersManagement() {
           <div className="fixed inset-0 flex items-center justify-center p-4">
             {/* Modal Container */}
             <div
-              className="relative w-full max-w-lg bg-white dark:bg-gray-800 rounded-xl shadow-2xl transform transition-all overflow-hidden"
+              className="relative w-full max-w-lg rounded-2xl border border-zinc-700/60 bg-gradient-to-b from-zinc-900 to-zinc-950 shadow-[0_20px_60px_rgba(0,0,0,0.6)] ring-1 ring-black/30 transform transition-all overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+              <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 border-b border-white/10">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
@@ -774,7 +839,7 @@ export default function UsersManagement() {
                 </div>
               </div>
               {/* User Info Card */}
-              <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+              <div className="px-6 py-4 bg-zinc-900/40 border-b border-zinc-700/60">
                 <div className="flex items-center space-x-3">
                   <div className="flex-shrink-0">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
@@ -806,11 +871,11 @@ export default function UsersManagement() {
               {/* Form Content */}
               <div className="px-6 py-4 space-y-4">
                 {/* Plan Status Toggle */}
-                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                <div className="bg-zinc-900/40 rounded-lg p-4 border border-zinc-700/60">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="p-1.5 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                        <FiCheckCircle className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                      <div className="p-1.5 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+                        <FiCheckCircle className="h-4 w-4 text-indigo-400" />
                       </div>
                       <div>
                         <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -829,7 +894,7 @@ export default function UsersManagement() {
                         onChange={(e) => setPlanData({ ...planData, isActive: e.target.checked })}
                         disabled={isUpdating}
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
+                      <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500/40 rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all border border-zinc-600 peer-checked:bg-indigo-600">
                       </div>
                     </label>
                   </div>
@@ -841,14 +906,14 @@ export default function UsersManagement() {
                     <div className="grid grid-cols-2 gap-4">
                       {/* Start Date */}
                       <div className="space-y-1">
-                        <label htmlFor="startDate" className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                        <label htmlFor="startDate" className="block text-xs font-medium text-zinc-300">
                           Fecha de Inicio
                         </label>
                         <div className="relative">
                           <input
                             type="date"
                             id="startDate"
-                            className="block w-full px-3 py-2 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="block w-full px-3 py-2 text-sm text-white bg-zinc-900 border border-zinc-700/60 rounded-lg focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40 transition-colors"
                             value={planData.startDate || ''}
                             onChange={(e) => setPlanData({ ...planData, startDate: e.target.value })}
                             disabled={isUpdating}
@@ -860,14 +925,14 @@ export default function UsersManagement() {
 
                       {/* End Date */}
                       <div className="space-y-1">
-                        <label htmlFor="endDate" className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                        <label htmlFor="endDate" className="block text-xs font-medium text-zinc-300">
                           Fecha de Vencimiento
                         </label>
                         <div className="relative">
                           <input
                             type="date"
                             id="endDate"
-                            className="block w-full px-3 py-2 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="block w-full px-3 py-2 text-sm text-white bg-zinc-900 border border-zinc-700/60 rounded-lg focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40 transition-colors"
                             value={planData.endDate || ''}
                             min={planData.startDate || ''}
                             onChange={(e) => setPlanData({ ...planData, endDate: e.target.value })}
@@ -881,11 +946,11 @@ export default function UsersManagement() {
 
                     {/* Duration Summary */}
                     {planData.startDate && planData.endDate && (
-                      <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3 border border-emerald-200 dark:border-emerald-800">
+                      <div className="bg-emerald-500/10 rounded-lg p-3 border border-emerald-500/20">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
-                            <FiClock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                            <span className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+                            <FiClock className="h-4 w-4 text-emerald-400" />
+                            <span className="text-sm font-medium text-emerald-200">
                               Duración: {calculateDaysDifference(planData.startDate, planData.endDate)} días
                             </span>
                           </div>
@@ -897,11 +962,11 @@ export default function UsersManagement() {
               </div>
 
               {/* Footer Actions */}
-              <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-600">
+              <div className="px-6 py-4 bg-zinc-900/40 border-t border-zinc-700/60">
                 <div className="flex space-x-3">
                   <button
                     type="button"
-                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
+                    className="flex-1 px-4 py-2 text-sm font-medium text-zinc-200 bg-zinc-800 border border-zinc-700/60 rounded-lg hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 disabled:opacity-50 transition-colors"
                     onClick={handleClosePlanModal}
                     disabled={isUpdating}
                   >
@@ -909,7 +974,7 @@ export default function UsersManagement() {
                   </button>
                   <button
                     type="button"
-                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
+                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/40 disabled:opacity-50 transition-colors"
                     onClick={handleSavePlan}
                     disabled={isUpdating || (planData.isActive && (!planData.startDate || !planData.endDate))}
                   >

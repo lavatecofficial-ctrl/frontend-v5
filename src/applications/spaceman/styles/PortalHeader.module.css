@@ -1,0 +1,164 @@
+/* Portal Header - Estilos Spaceman */
+
+.portalHeader {
+  position: relative;
+  width: 100%;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  background: transparent;
+  z-index: 10;
+  grid-row: 1;
+  grid-column: 1;
+}
+
+.headerContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 2rem;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 0 0 auto;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 0 0 auto;
+  position: relative;
+}
+
+.bookmakerLogo {
+  width: auto;
+  max-width: 120px;
+  max-height: 32px;
+  object-fit: contain;
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 4px rgba(168, 85, 247, 0.4));
+}
+
+/* User Avatar - Tema Spaceman (púrpura) */
+.userAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.95) 0%, rgba(192, 132, 252, 0.95) 100%);
+  border: 2px solid rgba(168, 85, 247, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+  position: relative;
+  z-index: 1000;
+  padding: 4px;
+}
+
+.userAvatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(168, 85, 247, 0.6);
+  border-color: rgba(168, 85, 247, 0.7);
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+/* Dropdown Menu - Tema Spaceman */
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  width: 160px;
+  background: rgba(26, 11, 26, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  border-radius: 12px;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.7),
+    0 0 20px rgba(168, 85, 247, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.2s ease;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.dropdownOpen {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdownContent {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.dropdownItem:hover {
+  background: rgba(168, 85, 247, 0.2);
+  color: #fff;
+}
+
+.dropdownIcon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .portalHeader {
+    padding: 0 1.5rem;
+  }
+
+  .headerContainer {
+    gap: 1rem;
+  }
+
+  .bookmakerLogo {
+    max-height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .portalHeader {
+    padding: 0 1rem;
+  }
+
+  .bookmakerLogo {
+    max-height: 24px;
+  }
+}

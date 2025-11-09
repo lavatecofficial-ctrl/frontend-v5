@@ -1,0 +1,104 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 0.75rem 1rem;
+  gap: 0.25rem;
+}
+
+.title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(168, 85, 247, 0.95);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+  margin: 0;
+  text-align: left;
+}
+
+.tableWrapper {
+  flex: 1;
+  overflow: auto;
+  border-radius: 6px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.65rem;
+}
+
+.table thead {
+  position: sticky;
+  top: 0;
+  background: rgba(168, 85, 247, 0.15);
+  backdrop-filter: blur(10px);
+  z-index: 1;
+}
+
+.table th {
+  padding: 0.35rem 0.25rem;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.6rem;
+  color: rgba(168, 85, 247, 0.95);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background: rgba(168, 85, 247, 0.08);
+}
+
+.table td {
+  padding: 0.35rem 0.25rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  font-size: 0.63rem;
+}
+
+.profit {
+  color: #22c55e !important;
+  font-weight: 600;
+}
+
+.loss {
+  color: #ef4444 !important;
+  font-weight: 600;
+}
+
+.noData {
+  text-align: center;
+  padding: 1.5rem !important;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
+/* Scrollbar personalizado */
+.tableWrapper::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.tableWrapper::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.5);
+  border-radius: 10px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.7);
+}

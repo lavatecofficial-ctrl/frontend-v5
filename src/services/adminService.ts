@@ -27,6 +27,9 @@ interface UserStats {
     superadmin: number;
     user: number;
   };
+  usersByPlan?: {
+    [key: string]: number;
+  };
   usersByStatus: {
     active: number;
     expired: number;

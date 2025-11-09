@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSpaceman } from '@/hooks/useSpaceman';
 import { useBookmakers } from '@/hooks/useBookmakers';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 import { MdRocket, MdPlayArrow, MdCheckCircle, MdError, MdTrendingUp, MdSettings, MdArrowBack } from 'react-icons/md';
 import { IoArrowBack } from 'react-icons/io5';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -11,11 +13,32 @@ import Image from 'next/image';
 export default function SpacemanPage() {
   const spaceman = useSpaceman();
   const { bookmakers, loading: bookmakersLoading, error: bookmakersError, fetchBookmakersByGameId } = useBookmakers();
+  const { isAuthenticated, isLoading, isAdmin } = useAuth();
+  const router = useRouter();
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [selectedBookmaker, setSelectedBookmaker] = useState<any>(null);
   const [showConfig, setShowConfig] = useState(false);
   const [isEditingWebSocket, setIsEditingWebSocket] = useState(false);
   const [editingWebSocket, setEditingWebSocket] = useState('');
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push('/login');
+        if (isLoading) {
+          return null;
+        }
+        if (!isAuthenticated || !isAdmin()) {
+          return null;
+        }
+        return <AdminLayout />;
+
+  useEffect(() => {
+    if (isAuthenticated && isAdmin()) {
+      spaceman.getStatus();
+      fetchBookmakersByGameId(2);
+    }
+  }, [isAuthenticated, isAdmin, spaceman, fetchBookmakersByGameId]);
 
   // Funciones para manejar la edición de la URL WebSocket
   const handleSaveWebSocket = async (url: string) => {

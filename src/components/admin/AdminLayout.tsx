@@ -1,74 +1,47 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { MdLogout, MdHome } from 'react-icons/md';
+import { FaUsers } from 'react-icons/fa';
+import { PiAirplaneTiltFill } from 'react-icons/pi';
+import { BsRocket } from 'react-icons/bs';
+import { GiDiceFire } from 'react-icons/gi';
+import SpacemanControl from './SpacemanControl';
+import AviatorControl from './AviatorControl';
+import RouletteControl from './RouletteControl'; // ensure file exists
+import UsersManagement from './UsersManagement';
 
-import Link from 'next/link';
-import { 
-  MdDashboard, 
-  MdPeople, 
-  MdSettings, 
-  MdBarChart,
-  MdLogout,
-  MdMenu,
-  MdClose,
-  MdSupervisorAccount,
-  MdCardMembership,
-  MdRocket,
-  MdCasino
-} from 'react-icons/md';
-import { BiSupport } from 'react-icons/bi';
-
-interface AdminLayoutProps {
-  children: React.ReactNode;
-  pageTitle?: string;
-  pageDescription?: string;
-}
+type AdminSection = 'dashboard' | 'users' | 'aviator' | 'spaceman' | 'roulette';
 
 const menuItems = [
   {
-    name: 'Dashboard',
-    icon: MdDashboard,
-    href: '/admin',
-  },
-  {
     name: 'Usuarios',
-    icon: MdPeople,
-    href: '/admin/users',
+    icon: FaUsers,
+    section: 'users' as AdminSection,
   },
   {
     name: 'Aviator',
-    icon: MdRocket,
-    href: '/admin/aviator',
-  },
-  {
-    name: 'Roulettes',
-    icon: MdCasino,
-    href: '/admin/roulette',
+    icon: PiAirplaneTiltFill,
+    section: 'aviator' as AdminSection,
   },
   {
     name: 'Spaceman',
-    icon: MdRocket,
-    href: '/admin/spaceman',
+    icon: BsRocket,
+    section: 'spaceman' as AdminSection,
+  },
+  {
+    name: 'Roulettes',
+    icon: GiDiceFire,
+    section: 'roulette' as AdminSection,
   }
 ];
 
-export default function AdminLayout({ children, pageTitle, pageDescription }: AdminLayoutProps) {
-  const { user, logout, isSuperAdmin } = useAuth();
+export default function AdminLayout() {
+  const { logout, isSuperAdmin } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [contentOpacity, setContentOpacity] = useState(1);
-
-  // Suavizar transición entre páginas del panel
-  React.useEffect(() => {
-    // Evitar animar en la primera carga
-    if (typeof window === 'undefined') return;
-    setContentOpacity(0);
-    const id = requestAnimationFrame(() => setContentOpacity(1));
-    return () => cancelAnimationFrame(id);
-  }, [pathname]);
+  const [activeSection, setActiveSection] = useState<AdminSection>('users');
 
   const handleLogout = () => {
     logout();
@@ -79,223 +52,89 @@ export default function AdminLayout({ children, pageTitle, pageDescription }: Ad
     router.push('/dashboard');
   };
 
-  const isActiveRoute = (href: string) => {
-    if (href === '/admin') {
-      return pathname === '/admin';
-    }
-    return pathname.startsWith(href);
-  };
-
-  // Menú filtrado por rol: solo superadmin ve Dashboard y Usuarios
+  // Menú filtrado por rol: solo superadmin ve Usuarios
   const itemsToShow = menuItems.filter((item) => {
-    if (!isSuperAdmin() && (item.href === '/admin' || item.href === '/admin/users')) {
+    if (!isSuperAdmin() && item.section === 'users') {
       return false;
     }
     return true;
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
-      {/* Sidebar para desktop */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
-        <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto bg-black/20 backdrop-blur-xl border-r border-gray-700">
-          {/* Logo */}
-          <div className="flex items-center flex-shrink-0 px-4">
-            {/* Logo removido */}
-          </div>
-
-          {/* Admin Badge */}
-          <div className="mt-4 px-4">
-            <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg p-3">
-              <div className="flex items-center">
-                <MdSupervisorAccount className="w-6 h-6 text-white mr-3" />
-                <div>
-                  <p className="text-white font-semibold text-sm">Panel Admin</p>
-                  <p className="text-purple-100 text-xs">
-                    {isSuperAdmin() ? 'Super Administrador' : 'Administrador'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="mt-6 flex-1 px-2 space-y-1">
+    <div 
+      suppressHydrationWarning
+      className="min-h-screen relative w-full overflow-hidden flex flex-col"
+      style={{
+        backgroundColor: '#000',
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='120' height='120' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='120' height='120' fill='%23000000'/%3E%3Cpath d='M120 0 L0 0 0 120' fill='none' stroke='%230d0d0d' stroke-width='4'/%3E%3Cg fill='%230d0d0d'%3E%3Ccircle cx='11' cy='11' r='1'/%3E%3Ccircle cx='22' cy='11' r='1'/%3E%3Ccircle cx='33' cy='11' r='1'/%3E%3Ccircle cx='44' cy='11' r='1'/%3E%3Ccircle cx='55' cy='11' r='1'/%3E%3Ccircle cx='66' cy='11' r='1'/%3E%3Ccircle cx='77' cy='11' r='1'/%3E%3Ccircle cx='88' cy='11' r='1'/%3E%3Ccircle cx='99' cy='11' r='1'/%3E%3Ccircle cx='110' cy='11' r='1'/%3E%3Ccircle cx='11' cy='22' r='1'/%3E%3Ccircle cx='22' cy='22' r='1'/%3E%3Ccircle cx='33' cy='22' r='1'/%3E%3Ccircle cx='44' cy='22' r='1'/%3E%3Ccircle cx='55' cy='22' r='1'/%3E%3Ccircle cx='66' cy='22' r='1'/%3E%3Ccircle cx='77' cy='22' r='1'/%3E%3Ccircle cx='88' cy='22' r='1'/%3E%3Ccircle cx='99' cy='22' r='1'/%3E%3Ccircle cx='110' cy='22' r='1'/%3E%3Ccircle cx='11' cy='33' r='1'/%3E%3Ccircle cx='22' cy='33' r='1'/%3E%3Ccircle cx='33' cy='33' r='1'/%3E%3Ccircle cx='44' cy='33' r='1'/%3E%3Ccircle cx='55' cy='33' r='1'/%3E%3Ccircle cx='66' cy='33' r='1'/%3E%3Ccircle cx='77' cy='33' r='1'/%3E%3Ccircle cx='88' cy='33' r='1'/%3E%3Ccircle cx='99' cy='33' r='1'/%3E%3Ccircle cx='110' cy='33' r='1'/%3E%3Ccircle cx='11' cy='44' r='1'/%3E%3Ccircle cx='22' cy='44' r='1'/%3E%3Ccircle cx='33' cy='44' r='1'/%3E%3Ccircle cx='44' cy='44' r='1'/%3E%3Ccircle cx='55' cy='44' r='1'/%3E%3Ccircle cx='66' cy='44' r='1'/%3E%3Ccircle cx='77' cy='44' r='1'/%3E%3Ccircle cx='88' cy='44' r='1'/%3E%3Ccircle cx='99' cy='44' r='1'/%3E%3Ccircle cx='110' cy='44' r='1'/%3E%3Ccircle cx='11' cy='55' r='1'/%3E%3Ccircle cx='22' cy='55' r='1'/%3E%3Ccircle cx='33' cy='55' r='1'/%3E%3Ccircle cx='44' cy='55' r='1'/%3E%3Ccircle cx='55' cy='55' r='1'/%3E%3Ccircle cx='66' cy='55' r='1'/%3E%3Ccircle cx='77' cy='55' r='1'/%3E%3Ccircle cx='88' cy='55' r='1'/%3E%3Ccircle cx='99' cy='55' r='1'/%3E%3Ccircle cx='110' cy='55' r='1'/%3E%3Ccircle cx='11' cy='66' r='1'/%3E%3Ccircle cx='22' cy='66' r='1'/%3E%3Ccircle cx='33' cy='66' r='1'/%3E%3Ccircle cx='44' cy='66' r='1'/%3E%3Ccircle cx='55' cy='66' r='1'/%3E%3Ccircle cx='66' cy='66' r='1'/%3E%3Ccircle cx='77' cy='66' r='1'/%3E%3Ccircle cx='88' cy='66' r='1'/%3E%3Ccircle cx='99' cy='66' r='1'/%3E%3Ccircle cx='110' cy='66' r='1'/%3E%3Ccircle cx='11' cy='77' r='1'/%3E%3Ccircle cx='22' cy='77' r='1'/%3E%3Ccircle cx='33' cy='77' r='1'/%3E%3Ccircle cx='44' cy='77' r='1'/%3E%3Ccircle cx='55' cy='77' r='1'/%3E%3Ccircle cx='66' cy='77' r='1'/%3E%3Ccircle cx='77' cy='77' r='1'/%3E%3Ccircle cx='88' cy='77' r='1'/%3E%3Ccircle cx='99' cy='77' r='1'/%3E%3Ccircle cx='110' cy='77' r='1'/%3E%3Ccircle cx='11' cy='88' r='1'/%3E%3Ccircle cx='22' cy='88' r='1'/%3E%3Ccircle cx='33' cy='88' r='1'/%3E%3Ccircle cx='44' cy='88' r='1'/%3E%3Ccircle cx='55' cy='88' r='1'/%3E%3Ccircle cx='66' cy='88' r='1'/%3E%3Ccircle cx='77' cy='88' r='1'/%3E%3Ccircle cx='88' cy='88' r='1'/%3E%3Ccircle cx='99' cy='88' r='1'/%3E%3Ccircle cx='110' cy='88' r='1'/%3E%3Ccircle cx='11' cy='99' r='1'/%3E%3Ccircle cx='22' cy='99' r='1'/%3E%3Ccircle cx='33' cy='99' r='1'/%3E%3Ccircle cx='44' cy='99' r='1'/%3E%3Ccircle cx='55' cy='99' r='1'/%3E%3Ccircle cx='66' cy='99' r='1'/%3E%3Ccircle cx='77' cy='99' r='1'/%3E%3Ccircle cx='88' cy='99' r='1'/%3E%3Ccircle cx='99' cy='99' r='1'/%3E%3Ccircle cx='110' cy='99' r='1'/%3E%3Ccircle cx='11' cy='110' r='1'/%3E%3Ccircle cx='22' cy='110' r='1'/%3E%3Ccircle cx='33' cy='110' r='1'/%3E%3Ccircle cx='44' cy='110' r='1'/%3E%3Ccircle cx='55' cy='110' r='1'/%3E%3Ccircle cx='66' cy='110' r='1'/%3E%3Ccircle cx='77' cy='110' r='1'/%3E%3Ccircle cx='88' cy='110' r='1'/%3E%3Ccircle cx='99' cy='110' r='1'/%3E%3Ccircle cx='110' cy='110' r='1'/%3E%3C/g%3E%3C/svg%3E")`,
+        backgroundSize: '120px 120px',
+        backgroundRepeat: 'repeat'
+      }}>
+      {/* Topbar */}
+      <div suppressHydrationWarning className="w-full py-4 px-6">
+        <div suppressHydrationWarning className="max-w-7xl mx-auto flex items-center justify-center">
+          {/* Todos los iconos centrados */}
+          <div suppressHydrationWarning className="flex items-center justify-center gap-3">
             {itemsToShow.map((item) => {
               const Icon = item.icon;
               return (
-                <Link
+                <button
                   key={item.name}
-                  href={item.href}
-                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                    isActiveRoute(item.href)
-                      ? 'bg-purple-600 text-white shadow-lg'
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  onClick={() => setActiveSection(item.section)}
+                  className={`p-3 rounded-full transition-all duration-200 ${
+                    activeSection === item.section
+                      ? 'bg-gradient-to-br from-purple-600 to-blue-600 text-white'
+                      : 'bg-gradient-to-br from-gray-800 to-gray-900 text-gray-300 hover:from-gray-700 hover:to-gray-800 hover:text-white'
                   }`}
+                  style={{
+                    boxShadow: activeSection === item.section
+                      ? 'inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.2)'
+                      : 'inset 0 2px 4px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                  title={item.name}
                 >
-                  <Icon className="mr-3 flex-shrink-0 h-5 w-5" />
-                  {item.name}
-                </Link>
+                  <Icon className="w-6 h-6" />
+                </button>
               );
             })}
-          </nav>
 
-          {/* Bottom actions */}
-          <div className="flex-shrink-0 px-2 space-y-1">
+            {/* Separador visual */}
+            <div suppressHydrationWarning className="w-px h-6 bg-gray-700 mx-1" />
+
+            {/* Botón de volver al dashboard */}
             <button
               onClick={handleBackToDashboard}
-              className="group flex items-center w-full px-2 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white transition-all duration-200"
+              className="p-3 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-gray-300 hover:from-gray-700 hover:to-gray-800 hover:text-white transition-all duration-200"
+              style={{
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2)'
+              }}
+              title="Volver al Dashboard"
             >
-              <BiSupport className="mr-3 flex-shrink-0 h-5 w-5" />
-              Volver al Dashboard
+              <MdHome className="w-6 h-6" style={{ display: 'block' }} />
             </button>
-            
+
+            {/* Botón de logout */}
             <button
               onClick={handleLogout}
-              className="group flex items-center w-full px-2 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-red-600 hover:text-white transition-all duration-200"
+              className="p-3 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-gray-300 hover:from-red-600 hover:to-red-700 hover:text-white transition-all duration-200"
+              style={{
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2)'
+              }}
+              title="Cerrar Sesión"
             >
-              <MdLogout className="mr-3 flex-shrink-0 h-5 w-5" />
-              Cerrar Sesión
+              <MdLogout className="w-6 h-6" style={{ display: 'block' }} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Sidebar móvil */}
-      {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
-          {/* Overlay */}
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setSidebarOpen(false)}
-          />
-          
-          {/* Sidebar */}
-          <div className="fixed inset-y-0 left-0 flex flex-col w-64 bg-black/90 backdrop-blur-xl border-r border-gray-700">
-            {/* Header with close button */}
-            <div className="flex items-center justify-between p-4">
-              {/* Logo removido */}
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <MdClose className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* Admin Badge */}
-            <div className="px-4 mb-4">
-              <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg p-3">
-                <div className="flex items-center">
-                  <MdSupervisorAccount className="w-6 h-6 text-white mr-3" />
-                  <div>
-                    <p className="text-white font-semibold text-sm">Panel Admin</p>
-                    <p className="text-purple-100 text-xs">
-                      {isSuperAdmin() ? 'Super Administrador' : 'Administrador'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation */}
-            <nav className="flex-1 px-2 space-y-1">
-              {itemsToShow.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                      isActiveRoute(item.href)
-                        ? 'bg-purple-600 text-white shadow-lg'
-                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                    }`}
-                  >
-                    <Icon className="mr-3 flex-shrink-0 h-5 w-5" />
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Bottom actions */}
-            <div className="flex-shrink-0 px-2 space-y-1 pb-4">
-              <button
-                onClick={handleBackToDashboard}
-                className="group flex items-center w-full px-2 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white transition-all duration-200"
-              >
-                <BiSupport className="mr-3 flex-shrink-0 h-5 w-5" />
-                Volver al Dashboard
-              </button>
-              
-              <button
-                onClick={handleLogout}
-                className="group flex items-center w-full px-2 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-red-600 hover:text-white transition-all duration-200"
-              >
-                <MdLogout className="mr-3 flex-shrink-0 h-5 w-5" />
-                Cerrar Sesión
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main content */}
-      <div className="lg:pl-64 flex flex-col flex-1">
-        {/* Top bar móvil */}
-        <div className="lg:hidden bg-black/20 backdrop-blur-xl border-b border-gray-700 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <MdMenu className="w-6 h-6" />
-            </button>
-            
-            <div className="flex items-center space-x-3">
-              <div className="text-right">
-                <p className="text-white text-sm font-medium">{user?.fullName}</p>
-                <p className="text-gray-400 text-xs">
-                  {isSuperAdmin() ? 'Super Admin' : 'Admin'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Header desktop */}
-        <div className="hidden lg:block bg-black/10 backdrop-blur-xl border-b border-gray-700 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                {pageTitle || 'Panel de Administración'}
-              </h1>
-              <p className="text-gray-400 text-sm">
-                {pageDescription || 'Gestiona usuarios, roles y configuraciones'}
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-white text-sm font-medium">{user?.fullName}</p>
-                <p className="text-gray-400 text-xs">
-                  {isSuperAdmin() ? 'Super Administrador' : 'Administrador'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Page content */}
-        <main
-          className="flex-1 p-6 transition-opacity duration-200"
-          style={{ opacity: contentOpacity }}
-        >
-          {children}
-        </main>
-      </div>
+      {/* Page content */}
+      <main suppressHydrationWarning className="flex-1 p-6">
+        {activeSection === 'users' && <UsersManagement />}
+        {activeSection === 'aviator' && <AviatorControl />}
+        {activeSection === 'spaceman' && <SpacemanControl />}
+        {activeSection === 'roulette' && <RouletteControl />}
+      </main>
     </div>
   );
 }

@@ -42,16 +42,18 @@ const RangePercentagesCard: React.FC<RangePercentagesCardProps> = ({ stats, roun
       {
         data: [percentages.low, percentages.high, percentages.zero],
         backgroundColor: [
-          'rgba(59, 130, 246, 0.8)', // Azul para 1-18
-          'rgba(16, 185, 129, 0.8)', // Verde para 19-36
-          'rgba(239, 68, 68, 0.8)',  // Rojo para 0
+          'rgba(59, 130, 246, 0.9)', // Azul más intenso para 1-18
+          'rgba(16, 185, 129, 0.9)', // Verde más brillante para 19-36
+          'rgba(239, 68, 68, 0.9)',  // Rojo más intenso para 0
         ],
         borderColor: [
-          'rgba(59, 130, 246, 1)',
-          'rgba(16, 185, 129, 1)',
-          'rgba(239, 68, 68, 1)',
+          'rgba(96, 165, 250, 1)',
+          'rgba(52, 211, 153, 1)',
+          'rgba(248, 113, 113, 1)',
         ],
-        borderWidth: 1,
+        borderWidth: 2,
+        borderRadius: 8,
+        barThickness: 20,
       },
     ],
   };
@@ -83,37 +85,55 @@ const RangePercentagesCard: React.FC<RangePercentagesCardProps> = ({ stats, roun
         beginAtZero: true,
         max: 100,
         grid: {
-          color: 'rgba(255, 255, 255, 0.1)',
+          color: 'rgba(16, 185, 129, 0.15)',
+          lineWidth: 1,
         },
         ticks: {
-          color: 'rgba(255, 255, 255, 0.7)',
+          color: 'rgba(255, 255, 255, 0.8)',
           font: {
-            size: 10,
+            size: 11,
+            weight: 'bold' as const,
           },
+          callback: function(value: any) {
+            return value + '%';
+          }
         },
+        border: {
+          color: 'rgba(16, 185, 129, 0.3)',
+          width: 2,
+        }
       },
       y: {
         grid: {
           display: false,
         },
         ticks: {
-          color: 'rgba(255, 255, 255, 0.7)',
+          color: 'rgba(255, 255, 255, 0.9)',
           font: {
-            size: 10,
+            size: 12,
+            weight: 'bold' as const,
           },
         },
+        border: {
+          color: 'rgba(16, 185, 129, 0.3)',
+          width: 2,
+        }
       },
     },
   };
 
   return (
-    <div className="bg-gray-900/20 backdrop-blur-xl rounded-xl p-2 flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col relative z-10">
       <div className="flex flex-col h-full">
-        <h3 className="text-xs font-semibold text-white mb-2 text-center">
-          Rangos (Número {roundData?.number ?? 'N/A'})
+        <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#3B82F6] via-white to-[#10B981] mb-3 text-center tracking-wide drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+          RANGOS (#{roundData?.number ?? 'N/A'})
         </h3>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-full h-full">
+        <div className="flex-1 flex items-center justify-center relative">
+          {/* Glow effect detrás del gráfico */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-32 h-32 bg-[#10B981]/10 rounded-full blur-2xl"></div>
+          </div>
+          <div className="w-full h-full relative z-10">
             <Bar data={data} options={options} />
           </div>
         </div>

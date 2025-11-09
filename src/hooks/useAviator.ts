@@ -18,6 +18,7 @@ interface AviatorBookmakerInfo {
   statusWs: string;
   createdAt: string;
   updatedAt: string;
+  isEditable?: boolean;
   bookmaker: any;
   game: any;
 }
@@ -25,6 +26,7 @@ interface AviatorBookmakerInfo {
 export const useAviator = () => {
   const [status, setStatus] = useState<AviatorStatus | null>(null);
   const [bookmakerInfo, setBookmakerInfo] = useState<AviatorBookmakerInfo | null>(null);
+  const [websockets, setWebsockets] = useState<AviatorBookmakerInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -123,6 +125,69 @@ export const useAviator = () => {
     }
   }, [getBookmakerInfo]);
 
+  const updateAuthMessageById = useCallback(async (id: number, authMessage: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const url = `${APP_CONFIG.api.baseUrl}/api/aviator/websocket/${id}/auth-message`;
+      console.log('🌐 Llamando endpoint:', url);
+      console.log('📦 Payload:', { authMessage: authMessage.substring(0, 50) + '...' });
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: getAuthHeader(),
+        body: JSON.stringify({ authMessage }),
+      });
+
+      const data = await response.json();
+      console.log('📥 Respuesta del servidor:', data);
+
+      if (data.success) {
+        return { success: true };
+      } else {
+        setError(data.message || 'Error al actualizar Auth Message');
+        return { success: false, message: data.message };
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || 'Error de conexión';
+      setError(errorMessage);
+      console.error('❌ Error updating Aviator auth message by ID:', err);
+      return { success: false, message: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updateWebSocketUrlById = useCallback(async (id: number, url: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${APP_CONFIG.api.baseUrl}/api/aviator/websocket/${id}/url`, {
+        method: 'POST',
+        headers: getAuthHeader(),
+        body: JSON.stringify({ url }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        return { success: true };
+      } else {
+        setError(data.message || 'Error al actualizar URL WebSocket');
+        return { success: false, message: data.message };
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || 'Error de conexión';
+      setError(errorMessage);
+      console.error('Error updating WebSocket URL by ID:', err);
+      return { success: false, message: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const updateWebSocketStatus = useCallback(async (bookmakerId: number, status: string) => {
     try {
       setLoading(true);
@@ -153,6 +218,35 @@ export const useAviator = () => {
       setLoading(false);
     }
   }, [getBookmakerInfo]);
+
+  const getAllWebSockets = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${APP_CONFIG.api.baseUrl}/api/aviator/websockets`, {
+        method: 'GET',
+        headers: getAuthHeader(),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setWebsockets(data.data);
+        return { success: true, data: data.data };
+      } else {
+        setError(data.message || 'Error al obtener websockets');
+        return { success: false, message: data.message, data: [] };
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || 'Error de conexión';
+      setError(errorMessage);
+      console.error('Error getting all websockets:', err);
+      return { success: false, message: errorMessage, data: [] };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const start = useCallback(async () => {
     try {
@@ -187,12 +281,16 @@ export const useAviator = () => {
   return useMemo(() => ({
     status,
     bookmakerInfo,
+    websockets,
     loading,
     error,
     getStatus,
     getBookmakerInfo,
+    getAllWebSockets,
     updateAuthMessage,
+    updateAuthMessageById,
+    updateWebSocketUrlById,
     updateWebSocketStatus,
     start,
-  }), [status, bookmakerInfo, loading, error, getStatus, getBookmakerInfo, updateAuthMessage, updateWebSocketStatus, start]);
+  }), [status, bookmakerInfo, websockets, loading, error, getStatus, getBookmakerInfo, getAllWebSockets, updateAuthMessage, updateAuthMessageById, updateWebSocketUrlById, updateWebSocketStatus, start]);
 };

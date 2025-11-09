@@ -397,66 +397,7 @@ const MultiplierTrend = ({
         pointerEvents: 'none'
       }}>
         {/* View Toggle Buttons - Izquierda */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center',
-          padding: '0.25rem',
-          borderRadius: '8px',
-          background: 'rgba(40, 40, 45, 0.5)',
-          border: '1px solid rgba(60, 60, 65, 0.3)',
-          gap: '0.25rem',
-          pointerEvents: 'auto'
-        }}>
-          {/* Tendencia Button */}
-          <button
-            onClick={() => onViewChange?.('tendencia')}
-            style={{
-              padding: '0.15rem 0.6rem',
-              borderRadius: '6px',
-              background: currentView === 'tendencia' 
-                ? 'rgba(70, 70, 75, 0.6)'
-                : 'transparent',
-              border: 'none',
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: '0.7rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              outline: 'none',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center'
-            }}
-          >
-            Tendencia
-          </button>
-
-          {/* Finanzas Button */}
-          <button
-            onClick={() => onViewChange?.('finanzas')}
-            style={{
-              padding: '0.15rem 0.6rem',
-              borderRadius: '6px',
-              background: currentView === 'finanzas' 
-                ? 'rgba(70, 70, 75, 0.6)'
-                : 'transparent',
-              border: 'none',
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: '0.7rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              outline: 'none',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center'
-            }}
-          >
-            Finanzas
-          </button>
-        </div>
-
-        {/* Switches para herramientas - Derecha */}
+        {/* Switches para herramientas */}
         <div style={{ 
           display: 'flex', 
           gap: '0.5rem', 

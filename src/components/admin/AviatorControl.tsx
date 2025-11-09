@@ -1,12 +1,12 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useSpaceman } from '@/hooks/useSpaceman';
+import { useAviator } from '@/hooks/useAviator';
 import { MdClose } from 'react-icons/md';
 import { SiFusionauth } from 'react-icons/si';
 
-export default function SpacemanControl() {
-  const spaceman = useSpaceman();
+export default function AviatorControl() {
+  const aviator = useAviator();
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -16,29 +16,31 @@ export default function SpacemanControl() {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log(' AviatorControl montado');
     loadWebsockets();
   }, []);
 
   const loadWebsockets = async () => {
     setLoading(true);
     try {
-      await spaceman.getAllWebSockets();
-    } catch (e) {
-      // noop
+      await aviator.getAllWebSockets();
+    } catch (error) {
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  // Normalizamos datos para mostrar nombre/imagen del bookmaker desde la relación
   const rows = useMemo(() => {
-    return (spaceman.websockets || []).map((ws: any) => ({
+    return (aviator.websockets || []).map((ws: any) => ({
       ...ws,
       bookmakerName: ws?.bookmaker?.bookmaker ?? '-',
       bookmakerImg: ws?.bookmaker?.bookmaker_img ?? null,
-      authMessage: ws?.authMessage ?? '', // jsessionid mapeado en backend
-      isEditable: true,
+      isEditable: ws?.isEditable !== undefined ? ws.isEditable : ws?.is_editable, // soporte ambos
+      authMessage: ws?.authMessage ?? ws?.auth_message ?? '',
     }));
-  }, [spaceman.websockets]);
+  }, [aviator.websockets]);
 
   const truncate = (text: string, max: number = 40) => {
     if (!text) return '-';
@@ -58,8 +60,9 @@ export default function SpacemanControl() {
     try {
       setSaving(true);
       setSaveError(null);
-      const result = await spaceman.updateAuthMessageById(selectedId, tempAuth);
+      const result = await aviator.updateAuthMessageById(selectedId, tempAuth);
       if (result.success) {
+        // recargar lista para ver cambios
         await loadWebsockets();
         setShowModal(false);
       } else {
@@ -75,51 +78,51 @@ export default function SpacemanControl() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-lg font-bold text-white">Spaceman WebSockets</span>
+        <span className="text-lg font-bold text-white">Aviator WebSockets</span>
         <button
           type="button"
-          onClick={spaceman.start}
-          disabled={spaceman.loading}
-          className="px-4 py-2 rounded-md text-sm font-semibold text-white disabled:opacity-50 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400"
+          onClick={aviator.start}
+          disabled={aviator.loading}
+          className="px-4 py-2 rounded-md text-sm font-semibold text-white disabled:opacity-50 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400"
         >
-          {spaceman.loading ? 'Conectando…' : 'CONECTAR SPACEMAN'}
+          {aviator.loading ? 'Conectando…' : 'CONECTAR AVIATOR'}
         </button>
       </div>
-
       <div className="bg-black/40 border border-zinc-800 rounded-lg">
         <div className="overflow-x-auto">
           <table className="min-w-[760px] w-full">
-            <thead>
-              <tr className="border-b border-zinc-800">
-                <th className="px-4 py-3 text-left text-xs text-zinc-400">ID</th>
-                <th className="px-4 py-3 text-left text-xs text-zinc-400">Bookmaker ID</th>
-                <th className="px-4 py-3 text-left text-xs text-zinc-400">Bookmaker</th>
-                {/* Estado eliminado */}
-                <th className="px-4 py-3 text-left text-xs text-zinc-400">Auth Message</th>
-                <th className="px-4 py-3 text-right text-xs text-zinc-400">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={5} className="text-center py-8">Cargando...</td></tr>
-              ) : rows.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-8">Sin datos</td></tr>
-              ) : (
-                rows.map((ws) => (
-                  <tr key={ws.id} className="border-b border-zinc-800/50 hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3 text-sm text-white">{ws.id}</td>
-                    <td className="px-4 py-3 text-sm text-white">{ws.bookmakerId}</td>
-                    <td className="px-4 py-3 text-sm text-white">
-                      <div className="flex items-center gap-2">
-                        {ws.bookmakerImg ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={ws.bookmakerImg} alt={ws.bookmakerName} className="h-5 w-5 rounded-full object-contain" />
-                        ) : null}
-                        <span>{ws.bookmakerName}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-zinc-400 max-w-xs" title={ws.authMessage}>{truncate(ws.authMessage)}</td>
-                    <td className="px-4 py-3 text-right">
+          <thead>
+            <tr className="border-b border-zinc-800">
+              <th className="px-4 py-3 text-left text-xs text-zinc-400">ID</th>
+              <th className="px-4 py-3 text-left text-xs text-zinc-400">Bookmaker ID</th>
+              <th className="px-4 py-3 text-left text-xs text-zinc-400">Bookmaker</th>
+              {/* Estado eliminado */}
+              <th className="px-4 py-3 text-left text-xs text-zinc-400">Auth Message</th>
+              <th className="px-4 py-3 text-right text-xs text-zinc-400">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={5} className="text-center py-8">Cargando...</td></tr>
+            ) : aviator.websockets.length === 0 ? (
+              <tr><td colSpan={5} className="text-center py-8">Sin datos</td></tr>
+            ) : (
+              rows.map((ws) => (
+                <tr key={ws.id} className="border-b border-zinc-800/50 hover:bg-white/5 transition-colors">
+                  <td className="px-4 py-3 text-sm text-white">{ws.id}</td>
+                  <td className="px-4 py-3 text-sm text-white">{ws.bookmakerId}</td>
+                  <td className="px-4 py-3 text-sm text-white">
+                    <div className="flex items-center gap-2">
+                      {ws.bookmakerImg ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={ws.bookmakerImg} alt={ws.bookmakerName} className="h-5 w-5 rounded-full object-contain" />
+                      ) : null}
+                      <span>{ws.bookmakerName}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-zinc-400 max-w-xs" title={ws.authMessage}>{truncate(ws.authMessage)}</td>
+                  <td className="px-4 py-3 text-right">
+                    {ws.isEditable ? (
                       <button
                         type="button"
                         onClick={() => openAuthModal(ws)}
@@ -128,11 +131,12 @@ export default function SpacemanControl() {
                       >
                         EDITAR
                       </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
+                    ) : null}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
           </table>
         </div>
       </div>
@@ -144,9 +148,10 @@ export default function SpacemanControl() {
             onClick={() => !saving && setShowModal(false)}
           />
           <div className="relative w-full max-w-2xl mx-auto rounded-2xl border border-zinc-700/60 bg-gradient-to-b from-zinc-900 to-zinc-950 shadow-2xl ring-1 ring-black/30">
+            {/* Header */}
             <div className="flex items-start gap-3 p-5 border-b border-zinc-800/60">
-              <div className="shrink-0 p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                <SiFusionauth className="w-5 h-5 text-purple-400" />
+              <div className="shrink-0 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <SiFusionauth className="w-5 h-5 text-emerald-400" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-base sm:text-lg font-semibold text-white">Editar Auth Message</h3>
@@ -167,12 +172,13 @@ export default function SpacemanControl() {
               </button>
             </div>
 
+            {/* Body */}
             <div className="p-5 pt-4">
               <textarea
-                className="w-full h-56 p-3 rounded-xl bg-zinc-950/80 border border-zinc-700/60 text-sm text-zinc-200 font-mono resize-none focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500/40 placeholder-zinc-600"
+                className="w-full h-56 p-3 rounded-xl bg-zinc-950/80 border border-zinc-700/60 text-sm text-zinc-200 font-mono resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 placeholder-zinc-600"
                 value={tempAuth}
                 onChange={(e) => setTempAuth(e.target.value)}
-                placeholder="Pega o edita el contenido del auth message (jsessionid)..."
+                placeholder="Pega o edita el contenido del auth message..."
                 disabled={saving}
               />
               {saveError && (
@@ -181,10 +187,11 @@ export default function SpacemanControl() {
                 </div>
               )}
               <div className="mt-3 text-[11px] text-zinc-500">
-                Se guardará en <span className="text-zinc-300 font-mono">spaceman_ws.jsessionid</span>
+                Se guardará en <span className="text-zinc-300 font-mono">aviator_ws.auth_message</span>
               </div>
             </div>
 
+            {/* Footer */}
             <div className="p-5 pt-0 flex items-center justify-end gap-3">
               <button
                 type="button"
@@ -197,7 +204,7 @@ export default function SpacemanControl() {
               <button
                 type="button"
                 onClick={handleSaveAuth}
-                className="px-4 py-2 rounded-md text-sm font-semibold text-white disabled:opacity-50 flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400"
+                className="px-4 py-2 rounded-md text-sm font-semibold text-white disabled:opacity-50 flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400"
                 disabled={saving}
               >
                 {saving && <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />}

@@ -65,8 +65,13 @@ const MultiplierTrend = ({
     resistance: null 
   });
   
-  const [lastRoundId, setLastRoundId] = useState<string | null>(null);
   const [isAboveEma, setIsAboveEma] = useState(false);
+  
+  // Estados locales para controlar los switches
+  const [showEmaLocal, setShowEma] = useState(showEma);
+  const [showBollingerBandsLocal, setShowBollingerBands] = useState(showBollingerBands);
+  const [showSupportResistanceLocal, setShowSupportResistance] = useState(showSupportResistance);
+  const [showGridLocal, setShowGrid] = useState(showGrid);
 
   const isMobile = typeof window !== 'undefined' ? window.innerWidth <= 768 : false;
   const padding = isMobile ? 20 : 40;
@@ -143,6 +148,7 @@ const MultiplierTrend = ({
       return { newPathData: [], ema: [], bollinger: { upper: [], lower: [], sma: [] }, sr: { support: null, resistance: null }, isAboveEma: false };
     }
 
+    // Invertir para que las más antiguas estén a la izquierda y las más recientes a la derecha
     const reversedRounds = rounds.slice().reverse();
     const limitedRounds = reversedRounds.slice(0, Math.min(dataCount, reversedRounds.length));
 
@@ -235,28 +241,14 @@ const MultiplierTrend = ({
       return;
     }
 
-    const currentRound = rounds[0];
-    const currentRoundId = currentRound?.round_id || `round-${Date.now()}`;
-    if (currentRoundId === lastRoundId) return;
-
-    setLastRoundId(currentRoundId);
+    // Actualizar SIEMPRE cuando processedData cambia (igual que StatsCard y DistributionChart)
     setPathData(processedData.newPathData);
     setEmaData(processedData.ema);
     setBollingerBands(processedData.bollinger);
     setSupportResistance(processedData.sr);
     setIsAboveEma(processedData.isAboveEma);
     onEmaStatusChange(processedData.isAboveEma);
-  }, [processedData, isLoadingRounds, rounds, lastRoundId, onEmaStatusChange]);
-
-  useEffect(() => {
-    if (rounds.length > 0 && rounds[0].round_id) {
-      setLastRoundId(rounds[0].round_id);
-    } else if (rounds.length > 0) {
-      setLastRoundId(`round-${Date.now()}`);
-    } else {
-      setLastRoundId(null);
-    }
-  }, [rounds]);
+  }, [processedData, isLoadingRounds, rounds, onEmaStatusChange]);
 
   // Desplazar el scroll horizontal completamente a la derecha cuando pathData cambia
   useEffect(() => {
@@ -397,6 +389,210 @@ const MultiplierTrend = ({
         position: 'relative'
       }}
     >
+      {/* Controles superiores */}
+      <div style={{
+        position: 'absolute',
+        top: '0.5rem',
+        left: '0.5rem',
+        right: '0.5rem',
+        zIndex: 100,
+        display: 'flex',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        gap: '0.5rem',
+        flexWrap: 'wrap',
+        pointerEvents: 'none'
+      }}>
+        {/* Switches para herramientas */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '0.5rem', 
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          pointerEvents: 'auto'
+        }}>
+          {/* Switch EMA */}
+          <div
+            onClick={() => setShowEma(!showEmaLocal)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.25rem 0.6rem',
+              borderRadius: '8px',
+              background: 'rgba(40, 40, 45, 0.5)',
+              border: '1px solid rgba(60, 60, 65, 0.3)',
+              cursor: 'pointer',
+              userSelect: 'none',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{
+              width: '28px',
+              height: '14px',
+              borderRadius: '10px',
+              background: showEmaLocal ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.6), rgba(124, 58, 237, 0.6))' : 'rgba(100, 100, 105, 0.5)',
+              position: 'relative',
+              transition: 'all 0.2s ease'
+            }}>
+              <div style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: '#fff',
+                position: 'absolute',
+                top: '2px',
+                left: showEmaLocal ? '16px' : '2px',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+              }} />
+            </div>
+            <span style={{ 
+              fontSize: '0.7rem', 
+              fontWeight: 600,
+              color: 'rgba(255, 255, 255, 0.6)'
+            }}>
+              EMA
+            </span>
+          </div>
+
+          {/* Switch Bollinger Bands */}
+          <div
+            onClick={() => setShowBollingerBands(!showBollingerBandsLocal)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.25rem 0.6rem',
+              borderRadius: '8px',
+              background: 'rgba(40, 40, 45, 0.5)',
+              border: '1px solid rgba(60, 60, 65, 0.3)',
+              cursor: 'pointer',
+              userSelect: 'none',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{
+              width: '28px',
+              height: '14px',
+              borderRadius: '10px',
+              background: showBollingerBandsLocal ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.6), rgba(124, 58, 237, 0.6))' : 'rgba(100, 100, 105, 0.5)',
+              position: 'relative',
+              transition: 'all 0.2s ease'
+            }}>
+              <div style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: '#fff',
+                position: 'absolute',
+                top: '2px',
+                left: showBollingerBandsLocal ? '16px' : '2px',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+              }} />
+            </div>
+            <span style={{ 
+              fontSize: '0.7rem', 
+              fontWeight: 600,
+              color: 'rgba(255, 255, 255, 0.6)'
+            }}>
+              Bollinger
+            </span>
+          </div>
+
+          {/* Switch Support/Resistance */}
+          <div
+            onClick={() => setShowSupportResistance(!showSupportResistanceLocal)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.25rem 0.6rem',
+              borderRadius: '8px',
+              background: 'rgba(40, 40, 45, 0.5)',
+              border: '1px solid rgba(60, 60, 65, 0.3)',
+              cursor: 'pointer',
+              userSelect: 'none',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{
+              width: '28px',
+              height: '14px',
+              borderRadius: '10px',
+              background: showSupportResistanceLocal ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.6), rgba(124, 58, 237, 0.6))' : 'rgba(100, 100, 105, 0.5)',
+              position: 'relative',
+              transition: 'all 0.2s ease'
+            }}>
+              <div style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: '#fff',
+                position: 'absolute',
+                top: '2px',
+                left: showSupportResistanceLocal ? '16px' : '2px',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+              }} />
+            </div>
+            <span style={{ 
+              fontSize: '0.7rem', 
+              fontWeight: 600,
+              color: 'rgba(255, 255, 255, 0.6)'
+            }}>
+              S/R
+            </span>
+          </div>
+
+          {/* Switch Grid */}
+          <div
+            onClick={() => setShowGrid(!showGridLocal)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.25rem 0.6rem',
+              borderRadius: '8px',
+              background: 'rgba(40, 40, 45, 0.5)',
+              border: '1px solid rgba(60, 60, 65, 0.3)',
+              cursor: 'pointer',
+              userSelect: 'none',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{
+              width: '28px',
+              height: '14px',
+              borderRadius: '10px',
+              background: showGridLocal ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.6), rgba(124, 58, 237, 0.6))' : 'rgba(100, 100, 105, 0.5)',
+              position: 'relative',
+              transition: 'all 0.2s ease'
+            }}>
+              <div style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: '#fff',
+                position: 'absolute',
+                top: '2px',
+                left: showGridLocal ? '16px' : '2px',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+              }} />
+            </div>
+            <span style={{ 
+              fontSize: '0.7rem', 
+              fontWeight: 600,
+              color: 'rgba(255, 255, 255, 0.6)'
+            }}>
+              Grid
+            </span>
+          </div>
+        </div>
+      </div>
+
       <div
         style={{
           overflowX: 'auto',
@@ -418,10 +614,11 @@ const MultiplierTrend = ({
             className="bg-transparent"
           >
             <defs>
-              {/* Línea principal (gris→blanco) se queda igual */}
+              {/* Línea principal - Gradiente cyan/azul tech profesional */}
               <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#9CA3AF" />
-                <stop offset="100%" stopColor="#F9FAFB" />
+                <stop offset="0%" stopColor="#06B6D4" stopOpacity="0.9" />  {/* cyan brillante */}
+                <stop offset="50%" stopColor="#3B82F6" stopOpacity="0.95" /> {/* azul */}
+                <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.9" /> {/* morado */}
               </linearGradient>
 
               {/* Área VERDE (arriba→abajo) */}
@@ -452,7 +649,7 @@ const MultiplierTrend = ({
                 <stop offset="100%" stopColor="#EF4444" stopOpacity="0.00" />
               </linearGradient>
 
-              {/* Gradiente neutro para Bollinger */}
+              {/* Gradiente tech para Bollinger - Ultra Pro */}
               <linearGradient
                 id="bollGrad"
                 x1={0}
@@ -461,9 +658,34 @@ const MultiplierTrend = ({
                 y2={totalHeight - padding}
                 gradientUnits="userSpaceOnUse"
               >
-                <stop offset="0%"   stopColor="#9CA3AF" stopOpacity="0.18" /> {/* arriba tenue */}
-                <stop offset="100%" stopColor="#9CA3AF" stopOpacity="0.00" /> {/* abajo transparente */}
+                <stop offset="0%"   stopColor="#06B6D4" stopOpacity="0.25" />
+                <stop offset="30%"  stopColor="#3B82F6" stopOpacity="0.20" />
+                <stop offset="70%"  stopColor="#8B5CF6" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.00" />
               </linearGradient>
+
+              {/* Gradiente para borde superior de Bollinger */}
+              <linearGradient id="bollUpperGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%"   stopColor="#06B6D4" stopOpacity="0.8" />
+                <stop offset="50%"  stopColor="#3B82F6" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.8" />
+              </linearGradient>
+
+              {/* Gradiente para borde inferior de Bollinger */}
+              <linearGradient id="bollLowerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%"   stopColor="#8B5CF6" stopOpacity="0.7" />
+                <stop offset="50%"  stopColor="#3B82F6" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.7" />
+              </linearGradient>
+
+              {/* Filtro de glow para Bollinger */}
+              <filter id="bollGlow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
 
               {/* Glow sutil */}
               <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
@@ -474,29 +696,45 @@ const MultiplierTrend = ({
                 </feMerge>
               </filter>
 
-              {/* Gradiente azul sobrio para EMA */}
+              {/* Gradiente naranja para EMA */}
               <linearGradient id="emaGrad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.9" />  {/* azul-500 */}
-                <stop offset="100%" stopColor="#60A5FA" stopOpacity="0.9" /> {/* azul-400 */}
+                <stop offset="0%" stopColor="#FF8C00" stopOpacity="0.95" />  {/* naranja oscuro */}
+                <stop offset="100%" stopColor="#FFA500" stopOpacity="0.95" /> {/* naranja brillante */}
               </linearGradient>
 
-              {/* Grid de líneas cuadriculadas */}
-              {showGrid && (
-                <pattern id="grid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+              {/* Grid tech profesional con efecto de brillo */}
+              {showGridLocal && (
+                <pattern id="grid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
                   <defs>
-                    <linearGradient id="gridGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#374151" stopOpacity="0.3" />   {/* gris */}
-                      <stop offset="100%" stopColor="#111827" stopOpacity="0.3" /> {/* negro */}
+                    {/* Gradiente principal del grid con toques morados */}
+                    <linearGradient id="gridGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.15" />   {/* morado */}
+                      <stop offset="50%" stopColor="#3B82F6" stopOpacity="0.08" />  {/* azul */}
+                      <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.12" /> {/* cyan */}
+                    </linearGradient>
+                    {/* Gradiente para líneas de acento */}
+                    <linearGradient id="gridAccent" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.15" />
                     </linearGradient>
                   </defs>
-                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="url(#gridGrad)" strokeWidth="0.5" />
+                  {/* Líneas principales del grid */}
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="url(#gridGrad)" strokeWidth="0.8" />
+                  {/* Línea de acento horizontal cada 4 celdas */}
+                  <line x1="0" y1="0" x2="40" y2="0" stroke="url(#gridAccent)" strokeWidth="1.2" opacity="0.6" />
+                  {/* Línea de acento vertical cada 4 celdas */}
+                  <line x1="0" y1="0" x2="0" y2="40" stroke="url(#gridAccent)" strokeWidth="1.2" opacity="0.6" />
+                  {/* Puntos de intersección con glow */}
+                  <circle cx="0" cy="0" r="1" fill="#8B5CF6" opacity="0.4">
+                    <animate attributeName="opacity" values="0.3;0.6;0.3" dur="3s" repeatCount="indefinite" />
+                  </circle>
                 </pattern>
               )}
 
             </defs>
 
             {/* Grid de fondo */}
-            {showGrid && <rect width="100%" height="100%" fill="url(#grid)" />}
+            {showGridLocal && <rect width="100%" height="100%" fill="url(#grid)" />}
 
             {/* Área bajo la serie principal (sin opacity en el path) */}
             <path
@@ -515,13 +753,91 @@ const MultiplierTrend = ({
             />
 
             {/* Elementos de análisis técnico */}
-            {/* Área entre bandas de Bollinger */}
-            {showBollingerBands && bollingerAreaPathD && (
-              <path d={bollingerAreaPathD} fill="url(#bollGrad)" stroke="none" />
+            {/* Bandas de Bollinger con estilo V2 */}
+            {showBollingerBandsLocal && bollingerAreaPathD && (
+              <g>
+                {/* Área entre bandas */}
+                <path d={bollingerAreaPathD} fill="url(#bollGrad)" stroke="none" />
+                
+                {/* Línea superior con glow */}
+                <path
+                  d={bollingerUpperPathD}
+                  stroke="url(#bollUpperGrad)"
+                  strokeWidth={isMobile ? 1.5 : 2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                  filter="url(#bollGlow)"
+                  opacity="0.9"
+                  style={{ transition: 'd 0.3s ease-out' }}
+                />
+                
+                {/* Línea inferior con glow */}
+                <path
+                  d={bollingerLowerPathD}
+                  stroke="url(#bollLowerGrad)"
+                  strokeWidth={isMobile ? 1.5 : 2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                  filter="url(#bollGlow)"
+                  opacity="0.9"
+                />
+                
+                {/* Puntos decorativos en banda superior */}
+                {bollingerBands.upper.map((point: any, index) => {
+                  if (!point || index % 3 !== 0) return null;
+                  return (
+                    <g key={`upper-${index}`}>
+                      <circle
+                        cx={point.x}
+                        cy={point.y}
+                        r={isMobile ? 2 : 3}
+                        fill="url(#bollUpperGrad)"
+                        opacity="0.8"
+                      />
+                      <circle
+                        cx={point.x}
+                        cy={point.y}
+                        r={isMobile ? 3.5 : 5}
+                        fill="none"
+                        stroke="url(#bollUpperGrad)"
+                        strokeWidth="1"
+                        opacity="0.4"
+                      />
+                    </g>
+                  );
+                })}
+                
+                {/* Puntos decorativos en banda inferior */}
+                {bollingerBands.lower.map((point: any, index) => {
+                  if (!point || index % 3 !== 0) return null;
+                  return (
+                    <g key={`lower-${index}`}>
+                      <circle
+                        cx={point.x}
+                        cy={point.y}
+                        r={isMobile ? 2 : 3}
+                        fill="url(#bollLowerGrad)"
+                        opacity="0.8"
+                      />
+                      <circle
+                        cx={point.x}
+                        cy={point.y}
+                        r={isMobile ? 3.5 : 5}
+                        fill="none"
+                        stroke="url(#bollLowerGrad)"
+                        strokeWidth="1"
+                        opacity="0.4"
+                      />
+                    </g>
+                  );
+                })}
+              </g>
             )}
             
             {/* Líneas de Soporte y Resistencia */}
-            {showSupportResistance && supportResistance.support !== null && (
+            {showSupportResistanceLocal && supportResistance.support !== null && (
               <line
                 x1={padding}
                 y1={supportResistance.support}
@@ -532,7 +848,7 @@ const MultiplierTrend = ({
                 strokeDasharray="5,5"
               />
             )}
-            {showSupportResistance && supportResistance.resistance !== null && (
+            {showSupportResistanceLocal && supportResistance.resistance !== null && (
               <line
                 x1={padding}
                 y1={supportResistance.resistance}
@@ -545,12 +861,13 @@ const MultiplierTrend = ({
             )}
             
             {/* Línea EMA */}
-            {showEma && emaData.length > 0 && (
+            {showEmaLocal && emaData.length > 0 && (
               <path
                 d={emaPathD}
                 stroke="url(#emaGrad)"
                 strokeWidth={isMobile ? 1.5 : 2}
                 strokeLinecap="round"
+                style={{ transition: 'd 0.3s ease-out' }}
                 strokeLinejoin="round"
                 fill="none"
               />
@@ -563,7 +880,7 @@ const MultiplierTrend = ({
               const isAboveEMA = emaPoint && point.y < emaPoint.y;
 
               let fillColor = 'rgba(156,163,175,0.9)'; // default gris
-              if (isAboveEMA) fillColor = 'rgba(59,130,246,0.65)'; // azul sobrio
+              if (isAboveEMA) fillColor = 'rgba(255,140,0,0.95)'; // naranja brillante super vivo
               else if (point.value > 0) fillColor = 'rgba(34,197,94,0.65)'; // verde sobrio
               else fillColor = 'rgba(239,68,68,0.65)'; // rojo sobrio
 
@@ -628,6 +945,67 @@ const MultiplierTrend = ({
           </svg>
         </div>
 
+      </div>
+
+      {/* Historial de multiplicadores - Parte inferior */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '0.5rem',
+          left: 0,
+          right: 0,
+          height: '32px',
+          zIndex: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          padding: '4px',
+          paddingRight: '12px',
+          overflow: 'hidden',
+          gap: '4px',
+          pointerEvents: 'auto'
+        }}
+      >
+        {rounds.slice(0, 30).reverse().map((round, index) => {
+          const multiplier = typeof round.max_multiplier === 'string' 
+            ? parseFloat(round.max_multiplier) 
+            : round.max_multiplier;
+          
+          let color = 'rgb(52, 180, 255)';
+          
+          if (multiplier >= 10.00) {
+            color = 'rgb(192, 23, 180)';
+          } else if (multiplier >= 2.00 && multiplier <= 9.99) {
+            color = 'rgb(145, 62, 248)';
+          } else if (multiplier >= 1.00 && multiplier <= 1.99) {
+            color = 'rgb(52, 180, 255)';
+          }
+          
+          return (
+            <span
+              key={`history-${index}-${round.round_id || index}`}
+              style={{
+                display: 'flex',
+                marginRight: '4px',
+                padding: '2px 4px',
+                position: 'relative',
+                zIndex: 1,
+                cursor: 'pointer',
+                textAlign: 'center',
+                fontSize: '12px',
+                fontWeight: 500,
+                letterSpacing: '-0.18px',
+                color: color,
+                whiteSpace: 'nowrap',
+                fontFeatureSettings: '"lnum", "tnum"',
+                fontVariantNumeric: 'lining-nums tabular-nums'
+              }}
+              title={`Ronda ${round.round_id || ''}: ${multiplier.toFixed(2)}x`}
+            >
+              {multiplier.toFixed(2)}x
+            </span>
+          );
+        })}
       </div>
     </div>
   );

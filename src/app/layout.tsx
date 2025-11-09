@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "../shared/styles/fonts.css";
 import SessionProvider from "@/components/SessionProvider";
+import "./suppress-hydration-warning";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,11 +17,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "INTELLI SOFTWARE",
-    template: "%s | INTELLI SOFTWARE",
+    default: "Aviator Colombia",
+    template: "%s | Aviator Colombia",
   },
-  description: "INTELLI SOFTWARE — Plataforma de software predictivo para juegos de casino online.",
-  applicationName: "INTELLI SOFTWARE",
+  description: "Aviator Colombia — Plataforma de software predictivo para juegos de casino online.",
+  applicationName: "Aviator Colombia",
   icons: {
     icon: "/favicon.png",
     shortcut: "/favicon.png",

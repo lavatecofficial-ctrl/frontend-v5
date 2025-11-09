@@ -14,10 +14,21 @@ export default function LiveMultiplier({ roundData }: LiveMultiplierProps) {
   };
 
   return (
-    <div className="flex-1 bg-gradient-to-br from-[#1A0B1A] to-[#2A0B2A] border border-[#4C1D95] text-gray-200 flex flex-col items-center justify-center p-4 relative overflow-hidden live-multiplier" style={{ borderRadius: '20px', height: '100%' }}>
-      <div className="text-center h-full flex flex-col justify-center">
-        <div className="text-sm text-purple-300 mb-2">MULTIPLICADOR ACTUAL</div>
-        <div className="text-4xl font-bold text-white">
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      padding: '1rem',
+      height: '100%',
+      position: 'relative',
+      zIndex: 2
+    }}>
+      <div style={{ textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div style={{ fontSize: '0.875rem', color: 'rgba(192, 132, 252, 0.9)', marginBottom: '0.5rem', fontWeight: 600, letterSpacing: '0.5px' }}>
+          MULTIPLICADOR ACTUAL
+        </div>
+        <div style={{ fontSize: '2.25rem', fontWeight: 700, color: '#ffffff', textShadow: '0 0 20px rgba(6, 182, 212, 0.5)' }}>
           {formatMultiplier(roundData.current_multiplier)}
         </div>
       </div>

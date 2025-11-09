@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { createPortal } from 'react-dom';
 import { Bookmaker } from '@/types/portal';
 import { useRouletteData } from '@/hooks/useRouletteData';
 import { useRoulettePrediction } from '@/hooks/useRoulettePrediction';
@@ -27,6 +28,8 @@ interface RoulettesPortalProps {
 
 export default function RoulettesPortal({ selectedBookmaker }: RoulettesPortalProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
   const { logout } = useAuth();
   const {
@@ -52,6 +55,13 @@ export default function RoulettesPortal({ selectedBookmaker }: RoulettesPortalPr
   } = useRoulettePrediction();
 
   const toggleMenu = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right
+      });
+    }
     setIsMenuOpen(!isMenuOpen);
   };
 
@@ -63,6 +73,27 @@ export default function RoulettesPortal({ selectedBookmaker }: RoulettesPortalPr
   const handleGoHome = () => {
     router.push('/dashboard');
   };
+
+  // Cerrar el menú cuando se hace clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMenuOpen && buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
+        const target = event.target as HTMLElement;
+        // Verificar que no se hizo clic en el menú dropdown
+        if (!target.closest('[data-dropdown-menu]')) {
+          setIsMenuOpen(false);
+        }
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   // Función para calcular estadísticas de docenas
   const calculateDozenStats = (rounds: RouletteRoundData[]) => {
@@ -368,95 +399,102 @@ export default function RoulettesPortal({ selectedBookmaker }: RoulettesPortalPr
   }, [historyData, colorStats, rangeStats, dozenStats, columnStats]);
 
   return (
-    <div className="h-screen grid grid-cols-12 gap-1 p-1 overflow-hidden roulettes-container relative bg-[radial-gradient(900px_600px_at_20%_0%,rgba(0,212,167,0.06),transparent_60%),radial-gradient(1200px_800px_at_100%_100%,rgba(242,193,78,0.05),transparent_65%),linear-gradient(to_bottom,#0B0F12,#0B0F12)] modern-scroll" style={{ gap: '4px', padding: '4px', gridTemplateRows: '50px 35px 1fr 1fr' }}>
-      {/* Overlay radial adicional */}
-      <div className="absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.35),transparent_70%)] pointer-events-none"></div>
+    <div className="h-screen grid grid-cols-12 gap-1 p-1 overflow-hidden roulettes-container relative bg-[radial-gradient(900px_600px_at_20%_0%,rgba(16,185,129,0.08),transparent_60%),radial-gradient(1200px_800px_at_100%_100%,rgba(220,38,38,0.06),transparent_65%),linear-gradient(to_bottom,#050709,#0A0D10,#050709)] modern-scroll" style={{ gap: '4px', padding: '4px', gridTemplateRows: '50px 35px 1fr 1fr' }}>
+      {/* Overlay radial adicional con efecto de profundidad */}
+      <div className="absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.4),transparent_70%)] pointer-events-none"></div>
       
       {/* Header - Fila 1 completa */}
-      <div className="col-span-12 bg-transparent border border-[#1F2A33] rounded-[20px] flex items-center justify-between px-6">
-        <div className="flex items-center">
-          <h1 className="text-xl font-bold text-white font-orbitron">
+      <div className="col-span-12 bg-gradient-to-br from-[#0E1419]/80 via-[#0A0F13]/90 to-[#0E1419]/80 border border-[#10B981]/20 rounded-[20px] flex items-center justify-between px-6 backdrop-blur-xl shadow-[0_8px_32px_rgba(16,185,129,0.12),inset_0_1px_0_rgba(16,185,129,0.1)] relative overflow-visible">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#10B981]/5 via-transparent to-[#DC2626]/5 pointer-events-none rounded-[20px]"></div>
+        <div className="flex items-center relative z-10">
+          <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] via-white to-[#10B981] font-orbitron drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]">
             {selectedBookmaker.bookmaker}
           </h1>
         </div>
         
         {/* Burger Menu */}
-        <div className="relative">
+        <div className="relative z-10">
           <button
+            ref={buttonRef}
             onClick={toggleMenu}
-            className="flex flex-col justify-center items-center w-8 h-8 space-y-1 transition-all duration-300 cursor-pointer"
+            className="flex flex-col justify-center items-center w-10 h-10 space-y-1 transition-all duration-300 cursor-pointer hover:bg-[#10B981]/10 rounded-lg p-2"
           >
-            <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
-            <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
-            <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+            <span className={`block w-6 h-0.5 bg-gradient-to-r from-[#10B981] to-white shadow-[0_0_8px_rgba(16,185,129,0.5)] transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
+            <span className={`block w-6 h-0.5 bg-gradient-to-r from-[#10B981] to-white shadow-[0_0_8px_rgba(16,185,129,0.5)] transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
+            <span className={`block w-6 h-0.5 bg-gradient-to-r from-[#10B981] to-white shadow-[0_0_8px_rgba(16,185,129,0.5)] transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
           </button>
-
-          {/* Dropdown Menu */}
-          <div className={`absolute right-0 mt-2 w-48 bg-black border border-gray-800 rounded-lg transition-all duration-300 z-50 ${isMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`} style={{ boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.08)' }}>
-            <div className="py-2">
-              <button
-                onClick={handleGoHome}
-                className="flex items-center w-full px-4 py-2 text-xs text-gray-300 hover:bg-gray-900 transition-colors duration-200 cursor-pointer font-orbitron-medium"
-              >
-                <IoHome className="mr-3 text-lg" />
-                Inicio
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center w-full px-4 py-2 text-xs text-gray-300 hover:bg-gray-900 transition-colors duration-200 cursor-pointer font-orbitron-medium"
-              >
-                <BiLogOutCircle className="mr-3 text-lg" />
-                Cerrar Sesión
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Fila completa - Fila 2 - Historial de números */}
-      <div className="col-span-12 bg-transparent py-1 relative mx-auto" style={{ maxWidth: '90%' }}>
-        <div className="w-full h-full">
-          <div className="flex gap-2 items-center overflow-hidden modern-scroll-horizontal">
+      <div className="col-span-12 relative mx-auto flex items-center" style={{ maxWidth: '90%' }}>
+        <div className="w-full h-full flex items-center">
+          <div className="flex gap-2 items-center overflow-hidden modern-scroll-horizontal w-full">
             {historyData && historyData.length > 0 ? (
               historyData.map((round, index) => {
                 console.log(`Renderizando ronda ${index}:`, round);
                 return (
                   <div
                     key={index}
-                    className={`relative flex-shrink-0 group cursor-pointer transition-all duration-300 hover:scale-110 ${
+                    className={`relative flex-shrink-0 group cursor-pointer transition-all duration-300 hover:scale-125 hover:-translate-y-1 ${
                       round.color === 'Red' 
-                        ? 'bg-gradient-to-br from-red-500 to-red-700' 
+                        ? 'bg-gradient-to-br from-red-500 via-red-600 to-red-800 shadow-[0_6px_20px_rgba(239,68,68,0.6),0_0_0_1px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.3)]' 
                         : round.color === 'Black' 
-                        ? 'bg-gradient-to-br from-gray-700 to-gray-900' 
-                        : 'bg-gradient-to-br from-green-500 to-green-700'
+                        ? 'bg-gradient-to-br from-gray-500 via-gray-700 to-gray-900 shadow-[0_6px_20px_rgba(55,65,81,0.6),0_0_0_1px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.2)]' 
+                        : 'bg-gradient-to-br from-green-400 via-green-600 to-green-800 shadow-[0_6px_20px_rgba(34,197,94,0.6),0_0_0_1px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.3)]'
                     }`}
                     style={{
-                      minWidth: '28px',
-                      height: '28px',
-                      borderRadius: '6px',
+                      minWidth: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       position: 'relative',
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      border: round.color === 'Red' 
+                        ? '1.5px solid rgba(248, 113, 113, 0.4)' 
+                        : round.color === 'Black' 
+                        ? '1.5px solid rgba(156, 163, 175, 0.4)' 
+                        : '1.5px solid rgba(74, 222, 128, 0.4)'
                     }}
                   >
-                    {/* Efecto de brillo interno */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {/* Efecto de brillo superior permanente */}
+                    <div className={`absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-transparent pointer-events-none ${
+                      round.color === 'Red' ? 'to-red-900/20' : round.color === 'Black' ? 'to-gray-900/30' : 'to-green-900/20'
+                    }`}></div>
+                    
+                    {/* Efecto de brillo interno en hover mejorado */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-white/15 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100"></div>
+                    
+                    {/* Patrón de textura sutil */}
+                    <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
+                      backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px)'
+                    }}></div>
                     
                     {/* Número */}
-                    <span className="text-white font-bold text-sm relative z-10 drop-shadow-sm">
+                    <span className={`text-white font-extrabold relative z-10 transition-all duration-300 ${
+                      round.number === 0 ? 'text-base' : 'text-sm'
+                    }`} style={{
+                      textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 0 20px rgba(255,255,255,0.3)',
+                      letterSpacing: '0.5px'
+                    }}>
                       {round.number}
                     </span>
                     
-                    {/* Borde brillante en hover */}
-                    <div className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                    {/* Borde brillante en hover mejorado con glow */}
+                    <div className={`absolute inset-0 rounded-[8px] opacity-0 group-hover:opacity-100 transition-all duration-300 ${
                       round.color === 'Red' 
-                        ? 'border border-red-300/50' 
+                        ? 'border-2 border-red-300/80 shadow-[inset_0_0_15px_rgba(239,68,68,0.5),0_0_20px_rgba(239,68,68,0.4)]' 
                         : round.color === 'Black' 
-                        ? 'border border-gray-300/50' 
-                        : 'border border-green-300/50'
+                        ? 'border-2 border-gray-300/80 shadow-[inset_0_0_15px_rgba(156,163,175,0.5),0_0_20px_rgba(156,163,175,0.3)]' 
+                        : 'border-2 border-green-300/80 shadow-[inset_0_0_15px_rgba(34,197,94,0.5),0_0_20px_rgba(34,197,94,0.4)]'
                     }`}></div>
+                    
+                    {/* Efecto de pulso en hover */}
+                    <div className={`absolute inset-0 rounded-[8px] opacity-0 group-hover:opacity-30 group-hover:animate-ping pointer-events-none ${
+                      round.color === 'Red' ? 'bg-red-400' : round.color === 'Black' ? 'bg-gray-400' : 'bg-green-400'
+                    }`} style={{ animationDuration: '1s', animationIterationCount: '1' }}></div>
                   </div>
                 );
               })
@@ -472,41 +510,43 @@ export default function RoulettesPortal({ selectedBookmaker }: RoulettesPortalPr
       </div>
 
       {/* Primera fila completa dividida en 4 partes */}
-      <div className="col-span-6 bg-transparent border border-[#1F2A33] rounded-[20px] p-4 overflow-y-auto">
-        <div className="w-full h-full">
+      <div className="col-span-6 relative overflow-y-auto rounded-[20px] p-3 backdrop-blur-2xl border border-[#10B981]/30 shadow-[0_10px_40px_rgba(16,185,129,0.2),0_0_0_1px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(16,185,129,0.15),inset_0_0_30px_rgba(0,0,0,0.5)]" style={{ background: 'linear-gradient(135deg, rgba(10,15,19,0.95) 0%, rgba(14,20,25,0.98) 25%, rgba(16,185,129,0.03) 50%, rgba(14,20,25,0.98) 75%, rgba(10,15,19,0.95) 100%)' }}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.08),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(220,38,38,0.05),transparent_50%)] pointer-events-none rounded-[20px]"></div>
+        <div className="absolute inset-0 opacity-30 pointer-events-none rounded-[20px]" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(16,185,129,0.03) 2px, rgba(16,185,129,0.03) 4px)' }}></div>
+        <div className="w-full h-full relative z-10">
           {/* Header de la tabla */}
-          <div className="grid grid-cols-4 gap-2 mb-2">
+          <div className="grid grid-cols-4 gap-1.5 mb-2 pb-1.5 border-b border-[#10B981]/30">
             <div className="text-center">
-              <h4 className="text-xs font-bold text-white font-sans">BET</h4>
+              <h4 className="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] to-white font-sans tracking-wider drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">BET</h4>
             </div>
             <div className="text-center">
-              <h4 className="text-xs font-bold text-white font-sans">TOTAL</h4>
+              <h4 className="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] to-white font-sans tracking-wider drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">TOTAL</h4>
             </div>
             <div className="text-center">
-              <h4 className="text-xs font-bold text-white font-sans">PCT</h4>
+              <h4 className="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] to-white font-sans tracking-wider drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">PCT</h4>
             </div>
             <div className="text-center">
-              <h4 className="text-xs font-bold text-white font-sans">LAST SPIN</h4>
+              <h4 className="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#10B981] to-white font-sans tracking-wider drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">LAST</h4>
             </div>
           </div>
           
           {/* Filas de datos */}
           <div className="space-y-1">
             {/* 1st DOZEN */}
-            <div className="grid grid-cols-4 gap-2 items-center border-b border-gray-600 pb-1">
+            <div className="grid grid-cols-4 gap-1.5 items-center border-b border-[#10B981]/20 pb-1 hover:bg-[#10B981]/5 rounded-lg px-1.5 py-0.5 transition-all duration-200 hover:border-[#10B981]/40">
               <div className="text-center">
-                <span className="text-xs text-gray-300 font-sans">1st DOZEN</span>
+                <span className="text-[10px] text-gray-300 font-sans font-medium">1st DOZ</span>
               </div>
               <div className="text-center">
-                <span className="text-xs text-white font-sans">{stats.dozens.first}</span>
+                <span className="text-[10px] text-white font-sans font-bold">{stats.dozens.first}</span>
               </div>
               <div className="text-center">
-                <span className="text-xs text-white font-sans">{stats.dozens.firstPct}%</span>
+                <span className="text-[10px] text-[#10B981] font-sans font-bold">{stats.dozens.firstPct}%</span>
               </div>
               <div className="text-center">
-                <span className={`text-xs font-sans ${
+                <span className={`text-[10px] font-sans font-bold ${
                   stats.lastSpins.firstDozen === 'AHORA' 
-                    ? 'text-green-400 font-bold' 
+                    ? 'text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]' 
                     : stats.lastSpins.firstDozen !== '-' 
                     ? 'text-yellow-400' 
                     : 'text-gray-400'
@@ -517,20 +557,20 @@ export default function RoulettesPortal({ selectedBookmaker }: RoulettesPortalPr
             </div>
             
             {/* 2nd DOZEN */}
-            <div className="grid grid-cols-4 gap-2 items-center border-b border-gray-600 pb-1">
+            <div className="grid grid-cols-4 gap-1.5 items-center border-b border-[#10B981]/20 pb-1 hover:bg-[#10B981]/5 rounded-lg px-1.5 py-0.5 transition-all duration-200 hover:border-[#10B981]/40">
               <div className="text-center">
-                <span className="text-xs text-gray-300 font-sans">2nd DOZEN</span>
+                <span className="text-[10px] text-gray-300 font-sans font-medium">2nd DOZ</span>
               </div>
               <div className="text-center">
-                <span className="text-xs text-white font-sans">{stats.dozens.second}</span>
+                <span className="text-[10px] text-white font-sans font-bold">{stats.dozens.second}</span>
               </div>
               <div className="text-center">
-                <span className="text-xs text-white font-sans">{stats.dozens.secondPct}%</span>
+                <span className="text-[10px] text-[#10B981] font-sans font-bold">{stats.dozens.secondPct}%</span>
               </div>
               <div className="text-center">
-                <span className={`text-xs font-sans ${
+                <span className={`text-[10px] font-sans font-bold ${
                   stats.lastSpins.secondDozen === 'AHORA' 
-                    ? 'text-green-400 font-bold' 
+                    ? 'text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]' 
                     : stats.lastSpins.secondDozen !== '-' 
                     ? 'text-yellow-400' 
                     : 'text-gray-400'
@@ -541,20 +581,20 @@ export default function RoulettesPortal({ selectedBookmaker }: RoulettesPortalPr
             </div>
             
             {/* 3rd DOZEN */}
-            <div className="grid grid-cols-4 gap-2 items-center border-b border-gray-600 pb-1">
+            <div className="grid grid-cols-4 gap-1.5 items-center border-b border-[#10B981]/20 pb-1 hover:bg-[#10B981]/5 rounded-lg px-1.5 py-0.5 transition-all duration-200 hover:border-[#10B981]/40">
               <div className="text-center">
-                <span className="text-xs text-gray-300 font-sans">3rd DOZEN</span>
+                <span className="text-[10px] text-gray-300 font-sans font-medium">3rd DOZ</span>
               </div>
               <div className="text-center">
-                <span className="text-xs text-white font-sans">{stats.dozens.third}</span>
+                <span className="text-[10px] text-white font-sans font-bold">{stats.dozens.third}</span>
               </div>
               <div className="text-center">
-                <span className="text-xs text-white font-sans">{stats.dozens.thirdPct}%</span>
+                <span className="text-[10px] text-[#10B981] font-sans font-bold">{stats.dozens.thirdPct}%</span>
               </div>
               <div className="text-center">
-                <span className={`text-xs font-sans ${
+                <span className={`text-[10px] font-sans font-bold ${
                   stats.lastSpins.thirdDozen === 'AHORA' 
-                    ? 'text-green-400 font-bold' 
+                    ? 'text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]' 
                     : stats.lastSpins.thirdDozen !== '-' 
                     ? 'text-yellow-400' 
                     : 'text-gray-400'
@@ -565,20 +605,20 @@ export default function RoulettesPortal({ selectedBookmaker }: RoulettesPortalPr
             </div>
             
             {/* 1st COLUMN */}
-            <div className="grid grid-cols-4 gap-2 items-center border-b border-gray-600 pb-1">
+            <div className="grid grid-cols-4 gap-1.5 items-center border-b border-[#10B981]/20 pb-1 hover:bg-[#10B981]/5 rounded-lg px-1.5 py-0.5 transition-all duration-200 hover:border-[#10B981]/40">
               <div className="text-center">
-                <span className="text-xs text-gray-300 font-sans">1st COLUMN</span>
+                <span className="text-[10px] text-gray-300 font-sans font-medium">1st COL</span>
               </div>
               <div className="text-center">
-                <span className="text-xs text-white font-sans">{stats.columns.first}</span>
+                <span className="text-[10px] text-white font-sans font-bold">{stats.columns.first}</span>
               </div>
               <div className="text-center">
-                <span className="text-xs text-white font-sans">{stats.columns.firstPct}%</span>
+                <span className="text-[10px] text-[#10B981] font-sans font-bold">{stats.columns.firstPct}%</span>
               </div>
               <div className="text-center">
-                <span className={`text-xs font-sans ${
+                <span className={`text-[10px] font-sans font-bold ${
                   stats.lastSpins.firstColumn === 'AHORA' 
-                    ? 'text-green-400 font-bold' 
+                    ? 'text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]' 
                     : stats.lastSpins.firstColumn !== '-' 
                     ? 'text-yellow-400' 
                     : 'text-gray-400'
@@ -589,20 +629,20 @@ export default function RoulettesPortal({ selectedBookmaker }: RoulettesPortalPr
             </div>
             
             {/* 2nd COLUMN */}
-            <div className="grid grid-cols-4 gap-2 items-center border-b border-gray-600 pb-1">
+            <div className="grid grid-cols-4 gap-1.5 items-center border-b border-[#10B981]/20 pb-1 hover:bg-[#10B981]/5 rounded-lg px-1.5 py-0.5 transition-all duration-200 hover:border-[#10B981]/40">
               <div className="text-center">
-                <span className="text-xs text-gray-300 font-sans">2nd COLUMN</span>
+                <span className="text-[10px] text-gray-300 font-sans font-medium">2nd COL</span>
               </div>
               <div className="text-center">
-                <span className="text-xs text-white font-sans">{stats.columns.second}</span>
+                <span className="text-[10px] text-white font-sans font-bold">{stats.columns.second}</span>
               </div>
               <div className="text-center">
-                <span className="text-xs text-white font-sans">{stats.columns.secondPct}%</span>
+                <span className="text-[10px] text-[#10B981] font-sans font-bold">{stats.columns.secondPct}%</span>
               </div>
               <div className="text-center">
-                <span className={`text-xs font-sans ${
+                <span className={`text-[10px] font-sans font-bold ${
                   stats.lastSpins.secondColumn === 'AHORA' 
-                    ? 'text-green-400 font-bold' 
+                    ? 'text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]' 
                     : stats.lastSpins.secondColumn !== '-' 
                     ? 'text-yellow-400' 
                     : 'text-gray-400'
@@ -613,20 +653,20 @@ export default function RoulettesPortal({ selectedBookmaker }: RoulettesPortalPr
             </div>
             
             {/* 3rd COLUMN */}
-            <div className="grid grid-cols-4 gap-2 items-center pb-1">
+            <div className="grid grid-cols-4 gap-1.5 items-center pb-1 hover:bg-[#10B981]/5 rounded-lg px-1.5 py-0.5 transition-all duration-200">
               <div className="text-center">
-                <span className="text-xs text-gray-300 font-sans">3rd COLUMN</span>
+                <span className="text-[10px] text-gray-300 font-sans font-medium">3rd COL</span>
               </div>
               <div className="text-center">
-                <span className="text-xs text-white font-sans">{stats.columns.third}</span>
+                <span className="text-[10px] text-white font-sans font-bold">{stats.columns.third}</span>
               </div>
               <div className="text-center">
-                <span className="text-xs text-white font-sans">{stats.columns.thirdPct}%</span>
+                <span className="text-[10px] text-[#10B981] font-sans font-bold">{stats.columns.thirdPct}%</span>
               </div>
               <div className="text-center">
-                <span className={`text-xs font-sans ${
+                <span className={`text-[10px] font-sans font-bold ${
                   stats.lastSpins.thirdColumn === 'AHORA' 
-                    ? 'text-green-400 font-bold' 
+                    ? 'text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]' 
                     : stats.lastSpins.thirdColumn !== '-' 
                     ? 'text-yellow-400' 
                     : 'text-gray-400'
@@ -639,14 +679,18 @@ export default function RoulettesPortal({ selectedBookmaker }: RoulettesPortalPr
         </div>
       </div>
       
-      <div className="col-span-3 bg-transparent border border-[#1F2A33] rounded-[20px] p-2 flex">
+      <div className="col-span-3 relative overflow-hidden rounded-[20px] p-2 flex backdrop-blur-2xl border border-[#10B981]/30 shadow-[0_12px_48px_rgba(16,185,129,0.18),0_0_0_1px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(16,185,129,0.15),inset_0_0_30px_rgba(0,0,0,0.5)]" style={{ background: 'linear-gradient(135deg, rgba(10,15,19,0.95) 0%, rgba(220,38,38,0.08) 30%, rgba(14,20,25,0.98) 50%, rgba(10,15,19,0.95) 100%)' }}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(220,38,38,0.12),transparent_70%)] pointer-events-none"></div>
+        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(220,38,38,0.05) 10px, rgba(220,38,38,0.05) 20px)' }}></div>
         <ColorPercentagesCard 
           stats={colorStats}
           roundData={currentRoundData}
         />
       </div>
       
-      <div className="col-span-3 bg-transparent border border-[#1F2A33] rounded-[20px] p-2 flex">
+      <div className="col-span-3 relative overflow-hidden rounded-[20px] p-2 flex backdrop-blur-2xl border border-[#10B981]/30 shadow-[0_12px_48px_rgba(16,185,129,0.18),0_0_0_1px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(16,185,129,0.15),inset_0_0_30px_rgba(0,0,0,0.5)]" style={{ background: 'linear-gradient(135deg, rgba(10,15,19,0.95) 0%, rgba(16,185,129,0.08) 30%, rgba(14,20,25,0.98) 50%, rgba(10,15,19,0.95) 100%)' }}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.12),transparent_70%)] pointer-events-none"></div>
+        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(16,185,129,0.05) 10px, rgba(16,185,129,0.05) 20px)' }}></div>
         <RangePercentagesCard 
           stats={rangeStats}
           roundData={currentRoundData}
@@ -654,27 +698,66 @@ export default function RoulettesPortal({ selectedBookmaker }: RoulettesPortalPr
       </div>
 
       {/* Segunda fila completa dividida en 4 partes */}
-      <div className="col-span-3 bg-transparent border border-[#1F2A33] rounded-[20px] flex items-center justify-center p-0">
+      <div className="col-span-3 relative overflow-hidden rounded-[20px] flex items-center justify-center p-0 backdrop-blur-2xl border border-[#10B981]/35 shadow-[0_16px_64px_rgba(16,185,129,0.25),0_0_0_1px_rgba(0,0,0,0.9),inset_0_2px_0_rgba(16,185,129,0.2),inset_0_0_40px_rgba(0,0,0,0.6)]" style={{ background: 'radial-gradient(ellipse at center, rgba(16,185,129,0.15) 0%, rgba(10,15,19,0.95) 40%, rgba(14,20,25,0.98) 100%)' }}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.2),transparent_60%)] pointer-events-none animate-pulse" style={{ animationDuration: '3s' }}></div>
+        <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ backgroundImage: 'repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(16,185,129,0.08) 15deg, transparent 30deg)' }}></div>
         <RouletteSpinner roundData={currentRoundData} />
       </div>
       
-      <div className="col-span-3 bg-transparent border border-[#1F2A33] rounded-[20px] flex items-center justify-center p-2">
+      <div className="col-span-3 relative overflow-hidden rounded-[20px] flex items-center justify-center p-2 backdrop-blur-2xl border border-[#10B981]/35 shadow-[0_16px_64px_rgba(16,185,129,0.25),0_0_0_1px_rgba(0,0,0,0.9),inset_0_2px_0_rgba(16,185,129,0.2),inset_0_0_40px_rgba(0,0,0,0.6)]" style={{ background: 'linear-gradient(135deg, rgba(10,15,19,0.95) 0%, rgba(16,185,129,0.12) 50%, rgba(10,15,19,0.95) 100%)' }}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(16,185,129,0.15),transparent_50%),radial-gradient(circle_at_70%_70%,rgba(59,130,246,0.08),transparent_50%)] pointer-events-none"></div>
+        <div className="absolute inset-0 opacity-25 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(16,185,129,0.04) 40px, rgba(16,185,129,0.04) 80px)' }}></div>
         <RoulettePredictionCard predictionData={predictionData} rawPrediction={rawPrediction || rawPredictionData} />
       </div>
       
-      <div className="col-span-3 bg-transparent border border-[#1F2A33] rounded-[20px] p-2 flex">
+      <div className="col-span-3 relative overflow-hidden rounded-[20px] p-2 flex backdrop-blur-2xl border border-[#10B981]/30 shadow-[0_12px_48px_rgba(16,185,129,0.18),0_0_0_1px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(16,185,129,0.15),inset_0_0_30px_rgba(0,0,0,0.5)]" style={{ background: 'linear-gradient(135deg, rgba(10,15,19,0.95) 0%, rgba(14,20,25,0.98) 20%, rgba(16,185,129,0.06) 50%, rgba(14,20,25,0.98) 80%, rgba(10,15,19,0.95) 100%)' }}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(16,185,129,0.1),transparent_60%)] pointer-events-none"></div>
+        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(16,185,129,0.05) 10px, rgba(16,185,129,0.05) 20px)' }}></div>
         <DozenPercentagesCard 
           stats={dozenStats}
           roundData={currentRoundData}
         />
       </div>
       
-      <div className="col-span-3 bg-transparent border border-[#1F2A33] rounded-[20px] p-2 flex">
+      <div className="col-span-3 relative overflow-hidden rounded-[20px] p-2 flex backdrop-blur-2xl border border-[#10B981]/30 shadow-[0_12px_48px_rgba(16,185,129,0.18),0_0_0_1px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(16,185,129,0.15),inset_0_0_30px_rgba(0,0,0,0.5)]" style={{ background: 'linear-gradient(135deg, rgba(10,15,19,0.95) 0%, rgba(14,20,25,0.98) 20%, rgba(16,185,129,0.06) 50%, rgba(14,20,25,0.98) 80%, rgba(10,15,19,0.95) 100%)' }}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(16,185,129,0.1),transparent_60%)] pointer-events-none"></div>
+        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(16,185,129,0.05) 10px, rgba(16,185,129,0.05) 20px)' }}></div>
         <ColumnPercentagesCard 
           stats={columnStats}
           roundData={currentRoundData}
         />
       </div>
+
+      {/* Dropdown Menu usando Portal */}
+      {typeof window !== 'undefined' && isMenuOpen && createPortal(
+        <div 
+          data-dropdown-menu
+          className="fixed w-48 bg-gradient-to-br from-[#0A0F13]/98 to-[#0E1419]/98 border border-[#10B981]/30 rounded-xl backdrop-blur-2xl transition-all duration-300 shadow-[0_10px_40px_rgba(16,185,129,0.2),inset_0_1px_0_rgba(16,185,129,0.15)] opacity-100 translate-y-0"
+          style={{
+            top: `${menuPosition.top}px`,
+            right: `${menuPosition.right}px`,
+            zIndex: 99999
+          }}
+        >
+          <div className="py-2">
+            <button
+              onClick={handleGoHome}
+              className="flex items-center w-full px-4 py-3 text-sm text-gray-200 hover:bg-[#10B981]/15 hover:text-[#10B981] transition-all duration-200 cursor-pointer font-orbitron-medium border-b border-[#10B981]/10 hover:border-[#10B981]/30"
+            >
+              <IoHome className="mr-3 text-lg" />
+              Inicio
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center w-full px-4 py-3 text-sm text-gray-200 hover:bg-[#DC2626]/15 hover:text-[#DC2626] transition-all duration-200 cursor-pointer font-orbitron-medium"
+            >
+              <BiLogOutCircle className="mr-3 text-lg" />
+              Cerrar Sesión
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

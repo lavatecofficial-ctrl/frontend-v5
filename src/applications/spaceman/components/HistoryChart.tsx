@@ -23,8 +23,8 @@ export default function HistoryChart({ history }: HistoryChartProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
-    // Mostrar solo las últimas 20 rondas
-    setDisplayHistory(history.slice(0, 20));
+    // Mostrar solo las últimas 20 rondas (invertidas para que la más reciente esté al final)
+    setDisplayHistory(history.slice(0, 20).reverse());
   }, [history]);
 
   const getMultiplierColor = (multiplier: number): string => {

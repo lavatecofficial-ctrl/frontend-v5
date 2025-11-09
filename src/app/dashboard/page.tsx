@@ -107,7 +107,12 @@ export default function DashboardPage() {
       <CanvasEffect />
       
       {/* Header */}
-      <LoginHeader />
+      <LoginHeader 
+        isDashboard={true}
+        isAdmin={isAdmin()}
+        onLogout={handleLogout}
+        onAdminClick={() => router.push('/admin')}
+      />
 
       {/* Main Content */}
       {showBookmakers ? (

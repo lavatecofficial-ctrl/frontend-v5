@@ -1,0 +1,240 @@
+/* Small Cards - Estilos Spaceman */
+
+.container {
+  display: contents;
+}
+
+.kpiCard {
+  background: 
+    linear-gradient(135deg, 
+      rgba(15, 15, 20, 0.92) 0%, 
+      rgba(20, 15, 25, 0.95) 100%
+    ),
+    radial-gradient(circle at bottom left, rgba(6, 182, 212, 0.06) 0%, transparent 50%);
+  
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+  
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.9),
+    0 4px 12px rgba(0, 0, 0, 0.7),
+    0 0 30px rgba(6, 182, 212, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 0 20px rgba(0, 0, 0, 0.5);
+  
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.75rem;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Borde brillante para KPI cards */
+.kpiCard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  padding: 1px;
+  background: linear-gradient(135deg, 
+    rgba(6, 182, 212, 0.25) 0%,
+    rgba(139, 92, 246, 0.25) 100%
+  );
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.3;
+  z-index: 10;
+  transition: opacity 0.3s ease;
+}
+
+.kpiCard:hover {
+  box-shadow: 
+    0 12px 35px rgba(0, 0, 0, 0.95),
+    0 6px 15px rgba(0, 0, 0, 0.75),
+    0 0 40px rgba(6, 182, 212, 0.08),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.kpiCard:hover::after {
+  opacity: 0.5;
+}
+
+.kpiHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.kpiIcon {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
+.kpiLabel {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  position: relative;
+  z-index: 2;
+}
+
+.kpiValue {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+  position: relative;
+  z-index: 2;
+}
+
+/* Efectos de luz para cada tarjeta - Colores Spaceman */
+.kpiCard:nth-child(1)::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: radial-gradient(ellipse 100% 80% at top center, 
+    rgba(168, 85, 247, 0.5) 0%, 
+    rgba(168, 85, 247, 0.3) 30%,
+    rgba(168, 85, 247, 0.15) 50%,
+    transparent 80%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.kpiCard:nth-child(2)::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: radial-gradient(ellipse 100% 80% at top center, 
+    rgba(139, 92, 246, 0.5) 0%, 
+    rgba(139, 92, 246, 0.3) 30%,
+    rgba(139, 92, 246, 0.15) 50%,
+    transparent 80%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.kpiCard:nth-child(3)::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: radial-gradient(ellipse 100% 80% at top center, 
+    rgba(236, 72, 153, 0.5) 0%, 
+    rgba(236, 72, 153, 0.3) 30%,
+    rgba(236, 72, 153, 0.15) 50%,
+    transparent 80%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.kpiCard:nth-child(4)::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: radial-gradient(ellipse 100% 80% at top center, 
+    rgba(192, 132, 252, 0.5) 0%, 
+    rgba(192, 132, 252, 0.3) 30%,
+    rgba(192, 132, 252, 0.15) 50%,
+    transparent 80%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Colores de iconos - Tema Spaceman */
+.iconPurple {
+  color: rgba(168, 85, 247, 0.9);
+}
+
+.iconViolet {
+  color: rgba(139, 92, 246, 0.9);
+}
+
+.iconPink {
+  color: rgba(236, 72, 153, 0.9);
+}
+
+.iconLavender {
+  color: rgba(192, 132, 252, 0.9);
+}
+
+/* Colores de valores - Tema Spaceman */
+.valuePurple {
+  color: rgba(168, 85, 247, 0.95);
+}
+
+.valueViolet {
+  color: rgba(139, 92, 246, 0.95);
+}
+
+.valuePink {
+  color: rgba(236, 72, 153, 0.95);
+}
+
+.valueLavender {
+  color: rgba(192, 132, 252, 0.95);
+}
+
+/* MOBILE - Estilos compactos */
+@media (max-width: 1024px) {
+  .kpiCard {
+    min-height: 50px !important;
+    padding: 0.25rem 0.35rem !important;
+    gap: 0.05rem !important;
+  }
+  
+  .kpiIcon {
+    font-size: 0.7rem !important;
+  }
+  
+  .kpiLabel {
+    font-size: 0.55rem !important;
+    letter-spacing: 0.2px !important;
+  }
+  
+  .kpiValue {
+    font-size: 0.75rem !important;
+  }
+}
