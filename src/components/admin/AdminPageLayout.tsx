@@ -16,21 +16,28 @@ export default function AdminPageLayout({ children, pageTitle, pageDescription }
   const router = useRouter();
 
   useEffect(() => {
+    console.log('🔍 AdminPageLayout - Auth State:', {
+      isLoading,
+      isAuthenticated,
+      isAdmin: isAdmin(),
+      timestamp: new Date().toISOString()
+    });
+
     if (!isLoading && !isAuthenticated) {
+      console.log('❌ No autenticado - Redirigiendo a /login');
       router.push('/login');
+    } else if (!isLoading && isAuthenticated) {
+      console.log('✅ Usuario autenticado - Mostrando contenido');
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router, isAdmin]);
 
   const handleLogout = () => {
     logout();
     router.push('/login');
   };
 
-  const handleBackToDashboard = () => {
-    router.push('/dashboard');
-  };
-
   const handleBackToAdmin = () => {
+    console.log('🏠 Redirigiendo a /admin');
     router.push('/admin');
   };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
-
+import { getCookie, setCookie, deleteCookie } from '../utils/cookies';
 import { User } from '../services/authService';
 
 interface AuthState {
@@ -22,21 +22,25 @@ export function useAuth() {
 
   const checkAuthStatus = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = getCookie('authToken');
+      console.log('🔑 useAuth - Verificando token:', token ? 'Token encontrado' : 'No hay token');
       
       if (token) {
         // Validar token con el backend
         const { valid, user } = await authService.validateToken(token);
+        console.log('🔍 useAuth - Validación del token:', { valid, user });
         
         if (valid && user) {
+          console.log('✅ useAuth - Token válido, usuario:', user);
           setAuthState({
             user,
             isAuthenticated: true,
             isLoading: false,
           });
         } else {
-          // Token inválido, limpiar localStorage
-          localStorage.removeItem('authToken');
+          console.log('❌ useAuth - Token inválido');
+          // Token inválido, limpiar cookie
+          deleteCookie('authToken');
           setAuthState({
             user: null,
             isAuthenticated: false,
@@ -44,6 +48,7 @@ export function useAuth() {
           });
         }
       } else {
+        console.log('⚠️ useAuth - No hay token en cookies');
         setAuthState({
           user: null,
           isAuthenticated: false,
@@ -51,8 +56,8 @@ export function useAuth() {
         });
       }
     } catch (error) {
-      console.error('Error verificando autenticación:', error);
-      localStorage.removeItem('authToken');
+      console.error('❌ useAuth - Error verificando autenticación:', error);
+      deleteCookie('authToken');
       setAuthState({
         user: null,
         isAuthenticated: false,
@@ -67,8 +72,8 @@ export function useAuth() {
     try {
       const response = await authService.register({ fullName, email, password });
       
-      // Guardar token
-      localStorage.setItem('authToken', response.token);
+      // Guardar token en cookie
+      setCookie('authToken', response.token, 7);
       
       setAuthState({
         user: response.user,
@@ -89,8 +94,8 @@ export function useAuth() {
     try {
       const response = await authService.login({ email, password });
       
-      // Guardar token
-      localStorage.setItem('authToken', response.token);
+      // Guardar token en cookie
+      setCookie('authToken', response.token, 7);
       
       setAuthState({
         user: response.user,
@@ -106,7 +111,7 @@ export function useAuth() {
   };
 
   const logout = () => {
-    localStorage.removeItem('authToken');
+    deleteCookie('authToken');
     setAuthState({
       user: null,
       isAuthenticated: false,
