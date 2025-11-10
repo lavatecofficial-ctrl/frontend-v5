@@ -68,6 +68,8 @@ const useRouletteSocket = (bookmakerId: number) => {
     if (!isAuthenticated || !bookmakerId) return;
 
     const token = getCookie('authToken');
+    console.log('🔍 [ROULETTE] Token obtenido:', token ? `${token.substring(0, 20)}...` : 'NULL');
+    
     if (!token) {
       setNotification({ message: 'No autenticado. Redirigiendo al login...', type: 'error' });
       setTimeout(() => router.push('/login'), 2000);
@@ -76,6 +78,7 @@ const useRouletteSocket = (bookmakerId: number) => {
 
     // URL del WebSocket
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'https://grupoaviatorcolombia.app';
+    console.log('🔌 [ROULETTE] Conectando con token:', token.substring(0, 20) + '...');
     const newSocket = io(`${wsUrl}/roulette`, {
       transports: ['websocket', 'polling'],
       auth: {
