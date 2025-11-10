@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { APP_CONFIG } from '../config';
+import { getCookie } from '../utils/cookies';
 
 interface AviatorStatus {
   isActive: boolean;
@@ -31,7 +32,7 @@ export const useAviator = () => {
   const [error, setError] = useState<string | null>(null);
 
   const getAuthHeader = () => {
-    const token = localStorage.getItem('authToken');
+    const token = getCookie('authToken');
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`

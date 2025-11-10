@@ -1,5 +1,6 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { APP_CONFIG } from '../config';
+import { getCookie } from '../utils/cookies';
 
 interface RouletteStatus {
   isActive: boolean;
@@ -26,7 +27,7 @@ export const useRoulette = () => {
   const [error, setError] = useState<string | null>(null);
 
   const getAuthHeader = () => {
-    const token = localStorage.getItem('authToken');
+    const token = getCookie('authToken');
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
@@ -67,7 +68,7 @@ export const useRoulette = () => {
       console.log('=== ROULETTE DEBUG ===');
       console.log('URL:', `${APP_CONFIG.api.baseUrl}/api/roulette/bookmaker/${bookmakerId}`);
       console.log('Headers:', headers);
-      console.log('Token from localStorage:', localStorage.getItem('authToken'));
+      console.log('Token from cookies:', getCookie('authToken'));
       console.log('========================');
       
       const response = await fetch(`${APP_CONFIG.api.baseUrl}/api/roulette/bookmaker/${bookmakerId}`, {
