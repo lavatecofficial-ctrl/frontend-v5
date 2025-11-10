@@ -100,6 +100,12 @@ const useAviatorSocket = (bookmakerId: number) => {
 
     // Escuchar historial (inicial al conectarse Y actualizaciones en cada crash)
     newSocket.on('history', (data) => {
+      // VALIDAR que los datos sean del bookmaker correcto
+      if (data.bookmakerId && data.bookmakerId !== bookmakerId) {
+        console.warn(`⚠️ Historial recibido de bookmaker ${data.bookmakerId}, pero esperaba ${bookmakerId}. Ignorando.`);
+        return;
+      }
+      
       if (data.rounds && Array.isArray(data.rounds)) {
         // Cancelar actualización pendiente
         if (historyUpdateTimer) {
@@ -117,6 +123,8 @@ const useAviatorSocket = (bookmakerId: number) => {
           onlinePlayers: parseInt(round.onlinePlayers || round.online_players || 0),
           createdAt: new Date(round.createdAt || round.created_at || Date.now())
         }));
+        
+        console.log(`📊 [HISTORY] Actualizando historial para bookmaker ${bookmakerId}: ${transformedRounds.length} rondas`);
         
         // Actualizar después de un pequeño delay para evitar renders múltiples
         historyUpdateTimer = setTimeout(() => {
