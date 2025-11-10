@@ -90,6 +90,16 @@ export default function SpacemanPage() {
     setSelectedBookmaker(null);
   };
 
+  // Mostrar loading mientras se verifica autenticación
+  if (isLoading) {
+    return null;
+  }
+
+  // Verificar autenticación y permisos
+  if (!isAuthenticated || !isAdmin()) {
+    return null;
+  }
+
   const SpacemanContent = () => {
     return (
       <div className="space-y-6">
@@ -172,10 +182,10 @@ export default function SpacemanPage() {
   const BookmakerConfigContent = () => {
     return (
       <div className="space-y-6">
-                 {/* Header con botÃ³n de regreso */}
+                 {/* Header con botón de regreso */}
          <div className="flex items-center justify-between mb-6">
            <h2 className="text-2xl font-bold text-white">
-             ConfiguraciÃ³n de {selectedBookmaker?.bookmaker}
+             Configuración de {selectedBookmaker?.bookmaker}
            </h2>
            <button
              onClick={handleBackToBookmakers}
