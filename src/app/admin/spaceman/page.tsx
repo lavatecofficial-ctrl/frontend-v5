@@ -25,13 +25,14 @@ export default function SpacemanPage() {
     if (!isLoading) {
       if (!isAuthenticated) {
         router.push('/login');
-        if (isLoading) {
-          return null;
-        }
-        if (!isAuthenticated || !isAdmin()) {
-          return null;
-        }
-        return <AdminLayout />;
+        return;
+      }
+      if (!isAdmin()) {
+        router.push('/dashboard');
+        return;
+      }
+    }
+  }, [isLoading, isAuthenticated, isAdmin, router]);
 
   useEffect(() => {
     if (isAuthenticated && isAdmin()) {
@@ -40,10 +41,10 @@ export default function SpacemanPage() {
     }
   }, [isAuthenticated, isAdmin, spaceman, fetchBookmakersByGameId]);
 
-  // Funciones para manejar la edición de la URL WebSocket
+  // Funciones para manejar la ediciÃ³n de la URL WebSocket
   const handleSaveWebSocket = async (url: string) => {
     try {
-      // Aquí iría la llamada a la API para guardar la URL WebSocket
+      // AquÃ­ irÃ­a la llamada a la API para guardar la URL WebSocket
       // await updateWebSocketUrl(editingWebSocket);
       setIsEditingWebSocket(false);
       // Recargar los datos
@@ -64,7 +65,7 @@ export default function SpacemanPage() {
     fetchBookmakersByGameId(2);
   }, []);
 
-  // Cargar información del bookmaker cuando se selecciona uno
+  // Cargar informaciÃ³n del bookmaker cuando se selecciona uno
   useEffect(() => {
     if (selectedBookmaker) {
       spaceman.getBookmakerInfo(selectedBookmaker.id);
@@ -171,10 +172,10 @@ export default function SpacemanPage() {
   const BookmakerConfigContent = () => {
     return (
       <div className="space-y-6">
-                 {/* Header con botón de regreso */}
+                 {/* Header con botÃ³n de regreso */}
          <div className="flex items-center justify-between mb-6">
            <h2 className="text-2xl font-bold text-white">
-             Configuración de {selectedBookmaker?.bookmaker}
+             ConfiguraciÃ³n de {selectedBookmaker?.bookmaker}
            </h2>
            <button
              onClick={handleBackToBookmakers}
@@ -185,18 +186,18 @@ export default function SpacemanPage() {
            </button>
          </div>
         
-        {/* Configuración del Bookmaker */}
+        {/* ConfiguraciÃ³n del Bookmaker */}
         <div className="w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Primera tarjeta: Botón CONECTAR y Auth URL */}
+            {/* Primera tarjeta: BotÃ³n CONECTAR y Auth URL */}
             <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-[20px] shadow-2xl overflow-hidden">
               <div className="px-8 py-6 border-b border-gray-700/30">
                 <h3 className="text-lg font-semibold text-white">Control del Servicio</h3>
-                <p className="text-sm text-gray-400 mt-1">Gestiona la conexión y configuración</p>
+                <p className="text-sm text-gray-400 mt-1">Gestiona la conexiÃ³n y configuraciÃ³n</p>
               </div>
               
               <div className="p-8 space-y-6">
-                {/* Botón CONECTAR */}
+                {/* BotÃ³n CONECTAR */}
                 <div className="flex justify-center">
                   <button
                     onClick={handleStart}
@@ -212,7 +213,7 @@ export default function SpacemanPage() {
                  <div className="space-y-4">
                    <div className="text-center">
                      <h4 className="text-md font-medium text-white mb-2">URL JSESSIONID</h4>
-                     <p className="text-xs text-gray-400">Configura la URL de sesión del servicio</p>
+                     <p className="text-xs text-gray-400">Configura la URL de sesiÃ³n del servicio</p>
                    </div>
                   
                   {isEditingWebSocket ? (
@@ -264,16 +265,16 @@ export default function SpacemanPage() {
               </div>
             </div>
             
-            {/* Segunda tarjeta: Información del Sistema */}
+            {/* Segunda tarjeta: InformaciÃ³n del Sistema */}
             <div className="bg-white/5 backdrop-blur-sm border border-gray-700/50 rounded-[20px] shadow-2xl overflow-hidden">
               <div className="px-8 py-6 border-b border-gray-700/30">
-                <h3 className="text-lg font-semibold text-white">Información del Sistema</h3>
-                <p className="text-sm text-gray-400 mt-1">Estado y configuración del servicio</p>
+                <h3 className="text-lg font-semibold text-white">InformaciÃ³n del Sistema</h3>
+                <p className="text-sm text-gray-400 mt-1">Estado y configuraciÃ³n del servicio</p>
               </div>
               
               <div className="p-8">
                 <div className="grid grid-cols-2 gap-8">
-                  {/* Columna de Títulos */}
+                  {/* Columna de TÃ­tulos */}
                   <div className="space-y-6">
                     <div className="flex items-center space-x-3">
                       <div className="w-2 h-2 rounded-full bg-blue-400"></div>
@@ -297,7 +298,7 @@ export default function SpacemanPage() {
                     
                     <div className="flex items-center space-x-3">
                       <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
-                      <span className="text-sm font-medium text-gray-300">Última Actualización</span>
+                      <span className="text-sm font-medium text-gray-300">Ãšltima ActualizaciÃ³n</span>
                     </div>
                   </div>
                   
