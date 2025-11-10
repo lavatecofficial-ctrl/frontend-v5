@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import io, { Socket } from 'socket.io-client';
 import { useAuth } from './useAuth';
+import { getCookie } from '@/utils/cookies';
 
 interface RouletteHistoryItem {
   id: number;
@@ -66,7 +67,7 @@ const useRouletteSocket = (bookmakerId: number) => {
   useEffect(() => {
     if (!isAuthenticated || !bookmakerId) return;
 
-    const token = localStorage.getItem('authToken');
+    const token = getCookie('authToken');
     if (!token) {
       setNotification({ message: 'No autenticado. Redirigiendo al login...', type: 'error' });
       setTimeout(() => router.push('/login'), 2000);
