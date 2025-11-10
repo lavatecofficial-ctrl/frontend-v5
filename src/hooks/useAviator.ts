@@ -250,16 +250,19 @@ export const useAviator = () => {
   }, []);
 
   const start = useCallback(async () => {
+    console.log('🚀 [AVIATOR] Iniciando servicio de Aviator...');
     try {
       setLoading(true);
       setError(null);
       
+      console.log('📡 [AVIATOR] Llamando endpoint:', `${APP_CONFIG.api.baseUrl}/api/aviator/start`);
       const response = await fetch(`${APP_CONFIG.api.baseUrl}/api/aviator/start`, {
         method: 'POST',
         headers: getAuthHeader(),
       });
 
       const data = await response.json();
+      console.log('📥 [AVIATOR] Respuesta del servidor:', data);
 
       if (data.status === 'success') {
         // Actualizar el estado después de iniciar

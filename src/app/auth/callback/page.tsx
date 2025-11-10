@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import CircularLoader from '@/components/CircularLoader';
 import { authService } from '@/services/authService';
+import { setCookie } from '@/utils/cookies';
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -44,8 +45,8 @@ export default function AuthCallback() {
           providerId: googleUser.id,
         });
 
-        // Guardar token
-        localStorage.setItem('authToken', response.token);
+        // Guardar token en cookie (igual que login normal)
+        setCookie('authToken', response.token, 7);
 
         // Redirigir según el rol
         const userData = response.user;
