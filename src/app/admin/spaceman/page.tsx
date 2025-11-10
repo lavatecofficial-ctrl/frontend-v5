@@ -5,7 +5,7 @@ import { useSpaceman } from '@/hooks/useSpaceman';
 import { useBookmakers } from '@/hooks/useBookmakers';
 import { MdRocket, MdPlayArrow, MdCheckCircle, MdError, MdTrendingUp, MdSettings, MdArrowBack } from 'react-icons/md';
 import { IoArrowBack } from 'react-icons/io5';
-import AdminLayout from '@/components/admin/AdminLayout';
+import AdminPageLayout from '@/components/admin/AdminPageLayout';
 import Image from 'next/image';
 
 export default function SpacemanPage() {
@@ -344,7 +344,7 @@ export default function SpacemanPage() {
   };
 
   return (
-    <AdminLayout 
+    <AdminPageLayout 
       pageTitle="Spaceman Control"
       pageDescription="Gestiona el servicio de WebSocket de Spaceman"
     >
@@ -353,6 +353,6 @@ export default function SpacemanPage() {
       ) : (
         <SpacemanContent />
       )}
-    </AdminLayout>
+    </AdminPageLayout>
   );
 }
