@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { getCookie } from '@/utils/cookies';
 
 interface RouletteRoundData {
   number: number;
@@ -211,8 +212,9 @@ export const useRouletteData = (): UseRouletteDataReturn => {
 
     console.log('Conectando al WebSocket de ruleta...');
     
-    // Obtener el token de autenticación
-    const token = localStorage.getItem('authToken');
+    // Obtener el token de autenticación desde cookies
+    const token = getCookie('authToken');
+    console.log('🔍 [ROULETTE-DATA] Token obtenido:', token ? `${token.substring(0, 20)}...` : 'NULL');
     
     socketRef.current = io(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://grupoaviatorcolombia.app'}/roulette`, {
       withCredentials: true,

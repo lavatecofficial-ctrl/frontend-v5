@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { getCookie } from '@/utils/cookies';
 
 interface PredictionData {
   bookmakerId: number;
@@ -77,7 +78,7 @@ export const useRoulettePrediction = (): UseRoulettePredictionReturn => {
   const connect = useCallback(() => {
     if (socketRef.current?.connected) return;
 
-    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : '';
+    const token = typeof window !== 'undefined' ? getCookie('authToken') : '';
     const socket = io(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://grupoaviatorcolombia.app'}/roulette`, {
       withCredentials: true,
       transports: ['websocket', 'polling'],
