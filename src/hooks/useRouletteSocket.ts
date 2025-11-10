@@ -78,6 +78,9 @@ const useRouletteSocket = (bookmakerId: number) => {
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'https://grupoaviatorcolombia.app';
     const newSocket = io(`${wsUrl}/roulette`, {
       transports: ['websocket', 'polling'],
+      auth: {
+        token: token,
+      },
     });
 
     newSocket.on('connect', () => {
