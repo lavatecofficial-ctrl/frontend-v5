@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { APP_CONFIG } from '../config';
 import { getCookie } from '../utils/cookies';
 
